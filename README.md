@@ -21,7 +21,7 @@ The DSE Company Scraper is a Python-based web scraping tool that gathers informa
 
 Follow these step-by-step instructions to use this program:
 
-1. Download the executable file from this [link](https://github.com/MustakAbsarKhan/DSE_COMPANY_SCRAPER_Python/raw/main/DSE_COMPANY_SCRAPER_EXE_BUNDLE.rar).
+1. Download the executable file from this [link](https://raw.githubusercontent.com/MustakAbsarKhan/DSE_COMPANY_SCRAPER_Python/main/exe_file/DSE_COMPANY_SCRAPER.exe).
 2. Extract the downloaded file to a desired location on your computer.
 3. Open the extracted folder and run the `DSE_Company_Scraper.exe` file.
 4. The program will automatically start scraping data from the Dhaka Stock Exchange website.
