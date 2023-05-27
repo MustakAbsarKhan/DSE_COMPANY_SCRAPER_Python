@@ -1,3 +1,7 @@
 *.xlsx
 *.csv
 .DS_Store
+DSE_Company_Details.xlsx
+DSE_COMPANY_SCRAPER.spec
+.venv
+build
