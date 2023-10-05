@@ -50,7 +50,27 @@ ignored_sectors_default = []
 use_default = input("Do you want to go with the default settings? (y/n): ")
 
 if use_default.lower() == 'y':
-    ignored_sectors_default = ['Corporate Bond', 'Debenture', 'G-SEC (T.Bond)']
+    #ignored_sectors_default = ['Corporate Bond', 'Debenture', 'G-SEC (T.Bond)']
+    ignored_sectors_default = ['Bank',
+                               'Cement',
+                               'Ceramics Sector',
+                               'Engineering',
+                               'Financial Institutions',
+                               'Food & Allied',
+                               'Fuel & Power',
+                               'Insurance',
+                               'IT Sector',
+                               'Jute',
+                               'Miscellaneous',
+                               'Mutual Funds',
+                               'Paper & Printing',
+                               'Pharmaceuticals & Chemicals',
+                               'Services & Real Estate',
+                               'Tannery Industries',
+                               'Telecommunication',
+                               'Textile',
+                               'Travel & Leisure',
+                               'Debenture']
 else:
     print("Sector Letters:")
     for key, value in sector_letters.items():
