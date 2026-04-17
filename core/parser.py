@@ -1,3 +1,5 @@
+import logging
+
 from bs4 import BeautifulSoup as bs
 
 
@@ -40,14 +42,14 @@ def extract_company_info(soup, sector_name):
     # Company Name
     try:
         info['Company Name'] = soup.find_all('i')[1].text.strip()
-    except:
-        pass
-
+    except (AttributeError, ValueError) as e:
+        logging.warning(f"Error extracting {'Company Name'}: {e}")
+        
     # Trading Code
     try:
         info['Trading Code'] = soup.find('tr', {'class': 'alt'}).text.split("\n")[1].replace("Trading Code:", "").strip()
-    except:
-        pass
+    except (AttributeError, ValueError) as e:
+        logging.warning(f"Error extracting {'Trading Code'}: {e}")
 
     # Table Data
     try:
@@ -61,16 +63,16 @@ def extract_company_info(soup, sector_name):
         info['52 Weeks Moving Range Lowest'] = float(range_text[0].replace(",", ""))
         info['52 Weeks Moving Range Highest'] = float(range_text[1].replace(",", ""))
 
-    except:
-        pass
+    except (AttributeError, ValueError) as e:
+        logging.warning(f"Error extracting table data: {e}")
 
     # Dividend Info
     try:
         shrink = soup.find_all(class_='shrink')[-1]
-    except:
+    except (AttributeError, ValueError) as e:
         try:
             shrink = soup.find_all(class_='shrink alt')[-1]
-        except:
+        except (AttributeError, ValueError) as e:
             shrink = None
 
     if shrink:
@@ -79,7 +81,7 @@ def extract_company_info(soup, sector_name):
             info['Last Dividend Year'] = div_info[0].text.strip()
             info['Dividend %'] = div_info[-2].text.strip()
             info['Dividend Yield'] = div_info[-1].text.strip()
-        except:
-            pass
+        except (AttributeError, ValueError) as e:
+            logging.warning(f"Error extracting dividend info: {e}")
 
     return info
