@@ -1,9 +1,19 @@
-from core.client import get
+from core.client import AsyncClient
 from core.parser import parse_html, extract_company_info
 
 
-def get_company_info(domain, company_url, sector_name):
-    html = get(domain + company_url)
-    soup = parse_html(html)
+async def get_company_infos(domain, company_urls, sector):
+    client = AsyncClient(concurrency=5)
 
-    return extract_company_info(soup, sector_name)
+    full_urls = [domain + url for url in company_urls]
+
+    html_list = await client.fetch_all(full_urls)
+
+    data = []
+
+    for html in html_list:
+        if html:
+            soup = parse_html(html)
+            data.append(extract_company_info(soup, sector))
+
+    return data

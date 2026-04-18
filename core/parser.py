@@ -11,7 +11,7 @@ def extract_sectors(soup, ignored):
 
     for td in soup.find_all("td", class_="text-left"):
         a = td.find("a", class_="ab1")
-
+        
         if a:
             name = a.text.strip()
             if name not in ignored:
@@ -19,6 +19,7 @@ def extract_sectors(soup, ignored):
                     "name": name,
                     "url": a["href"]
                 })
+    print(f"Total Sectors Found: {len(sectors)}", end="\r")
 
     return sectors
 
@@ -26,7 +27,9 @@ def extract_sectors(soup, ignored):
 # -------- COMPANIES --------
 def extract_companies(soup):
     links = soup.find_all("a", class_="ab1")
-    return [l["href"] for l in links][:-3]
+    l = [l["href"] for l in links][:-3]
+    print(f"Total Companies Found: {len(l)}", end="\r")
+    return l
 
 
 # -------- TABLE PARSER --------
