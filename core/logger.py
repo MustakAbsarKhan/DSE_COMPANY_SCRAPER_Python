@@ -10,11 +10,11 @@ def setup_logger():
         #Log message format example: 2024-06-01 12:00:00,000 - DSECompanyScraper - INFO - Scraping company info
     )
     
-    #console handler
+    #console handler AKA CH
     ch = log.StreamHandler()
     ch.setFormatter(formatter)
     
-    #file handler
+    #file handler AKA FH
     fh = log.FileHandler("DSECompanyScraper.log")
     fh.setFormatter(formatter)
     
