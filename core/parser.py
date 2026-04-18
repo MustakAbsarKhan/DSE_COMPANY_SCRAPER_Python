@@ -1,3 +1,4 @@
+import re
 from bs4 import BeautifulSoup as bs
 
 
@@ -11,7 +12,7 @@ def extract_sectors(soup, ignored):
 
     for td in soup.find_all("td", class_="text-left"):
         a = td.find("a", class_="ab1")
-        
+
         if a:
             name = a.text.strip()
             if name not in ignored:
@@ -19,7 +20,6 @@ def extract_sectors(soup, ignored):
                     "name": name,
                     "url": a["href"]
                 })
-    print(f"Total Sectors Found: {len(sectors)}", end="\r")
 
     return sectors
 
@@ -27,9 +27,17 @@ def extract_sectors(soup, ignored):
 # -------- COMPANIES --------
 def extract_companies(soup):
     links = soup.find_all("a", class_="ab1")
-    l = [l["href"] for l in links][:-3]
-    print(f"Total Companies Found: {len(l)}", end="\r")
-    return l
+
+    company_links = []
+
+    for link in links:
+        href = link.get("href")
+
+        # Only include valid company pages
+        if href and "displayCompany.php" in href:
+            company_links.append(href)
+
+    return company_links
 
 
 # -------- TABLE PARSER --------
@@ -50,6 +58,50 @@ def extract_table_data(soup):
     return data
 
 
+# -------- 🔥 FINAL CODE EXTRACTION (WORKS FOR DSE) --------
+def extract_codes(soup):
+    trading_code = None
+    scrip_code = None
+
+    try:
+        # Look specifically in the "alt" row first (most reliable)
+        row = soup.find("tr", class_="alt")
+
+        if row:
+            text = row.get_text(" ", strip=True)
+
+            # Example text:
+            # "Trading Code: ABBANK Scrip Code: 11101"
+
+            trading_match = re.search(r'Trading Code[:\s]+([A-Z0-9]+)', text)
+            scrip_match = re.search(r'Scrip Code[:\s]+([0-9]+)', text)
+
+            if trading_match:
+                trading_code = trading_match.group(1)
+
+            if scrip_match:
+                scrip_code = scrip_match.group(1)
+
+        # Fallback: search entire page if above fails
+        if not trading_code or not scrip_code:
+            full_text = soup.get_text(" ", strip=True)
+
+            if not trading_code:
+                trading_match = re.search(r'Trading Code[:\s]+([A-Z0-9]+)', full_text)
+                if trading_match:
+                    trading_code = trading_match.group(1)
+
+            if not scrip_code:
+                scrip_match = re.search(r'Scrip Code[:\s]+([0-9]+)', full_text)
+                if scrip_match:
+                    scrip_code = scrip_match.group(1)
+
+    except:
+        pass
+
+    return trading_code, scrip_code
+
+
 # -------- COMPANY INFO --------
 def extract_company_info(soup, sector):
     table = extract_table_data(soup)
@@ -60,16 +112,20 @@ def extract_company_info(soup, sector):
         except:
             return 0.0
 
+    # 52 Week Range
     low, high = 0.0, 0.0
-    if "52 Weeks' Moving Range" in table:
-        try:
+    try:
+        if "52 Weeks' Moving Range" in table:
             low, high = table["52 Weeks' Moving Range"].split(" - ")
-        except:
-            pass
+    except:
+        pass
+
+    trading_code, scrip_code = extract_codes(soup)
 
     return {
         "Company Name": soup.find_all("i")[1].text.strip() if soup.find_all("i") else None,
-        "Trading Code": table.get("Trading Code"),
+        "Trading Code": trading_code,
+        "Scrip Code": int(scrip_code) if scrip_code and scrip_code.isdigit() else None,
         "Sector": sector,
         "LTP": to_float(table.get("Last Trading Price", "0")),
         "52 Weeks Moving Range Lowest": to_float(low),

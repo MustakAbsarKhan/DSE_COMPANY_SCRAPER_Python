@@ -14,6 +14,10 @@ async def get_company_infos(domain, company_urls, sector):
     for html in html_list:
         if html:
             soup = parse_html(html)
-            data.append(extract_company_info(soup, sector))
+            info = extract_company_info(soup, sector)
+
+            # Skip empty/broken rows
+            if info["Company Name"]:
+                data.append(info)
 
     return data

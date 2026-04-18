@@ -1,35 +1,85 @@
-from config import MAIN_URL, DOMAIN, DEFAULT_IGNORED_SECTORS
+import asyncio
+
+from config import DOMAIN, MAIN_URL, IGNORED_SECTORS
 
 from pipelines.sectors import get_sectors
 from pipelines.companies import get_companies
-from pipelines.company_info import get_company_info
+from pipelines.company_info import get_company_infos
+
 from export.excel import save_to_excel
 
 
-def main():
-    data = []
+async def main():
+    all_data = []
 
-    sectors = get_sectors(MAIN_URL, DEFAULT_IGNORED_SECTORS)
+    total_sectors_found = 0
+    total_sectors_scraped = 0
+    total_companies_found = 0
+    total_companies_scraped = 0
 
+    # =========================
+    # STEP 1: GET SECTORS
+    # =========================
+    sectors = await get_sectors(MAIN_URL, IGNORED_SECTORS)
+
+    total_sectors_found = len(sectors)
+
+    print("\n" + "=" * 60)
+    print(f"TOTAL SECTORS FOUND: {total_sectors_found}")
+    print("=" * 60)
+
+    # =========================
+    # LOOP THROUGH SECTORS
+    # =========================
     for sector in sectors:
-        print(f"\nProcessing sector: {sector['name']}")
+        print(f"\n🔹 Processing Sector: {sector['name']}")
 
-        companies = get_companies(DOMAIN, sector['url'])
+        # =========================
+        # STEP 2: GET COMPANIES
+        # =========================
+        companies = await get_companies(DOMAIN, sector["url"])
 
-        for company in companies:
-            company_name = company.split("name=")[1] if "name=" in company else company
-            print(f"Scraping: {company_name}") 
+        sector_company_count = len(companies)
+        total_companies_found += sector_company_count
 
-            info = get_company_info(
-                DOMAIN,
-                company,
-                sector['name']
-            )
+        print(f"   ➤ Companies Found: {sector_company_count}")
 
-            data.append(info)
+        # =========================
+        # STEP 3: SCRAPE COMPANIES
+        # =========================
+        sector_data = await get_company_infos(
+            DOMAIN,
+            companies,
+            sector["name"]
+        )
 
-    save_to_excel(data)
+        scraped_count = len(sector_data)
+        total_companies_scraped += scraped_count
+        total_sectors_scraped += 1
+
+        print(f"   ✔ Companies Scraped: {scraped_count}")
+
+        all_data.extend(sector_data)
+
+    # =========================
+    # STEP 4: SAVE DATA
+    # =========================
+    save_to_excel(all_data)
+
+    # =========================
+    # FINAL SUMMARY
+    # =========================
+    print("\n" + "=" * 60)
+    print("FINAL SCRAPING SUMMARY")
+    print("=" * 60)
+
+    print(f"Total Sectors Found     : {total_sectors_found}")
+    print(f"Total Sectors Scraped   : {total_sectors_scraped}")
+    print(f"Total Companies Found   : {total_companies_found}")
+    print(f"Total Companies Scraped : {total_companies_scraped}")
+
+    print("=" * 60)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
