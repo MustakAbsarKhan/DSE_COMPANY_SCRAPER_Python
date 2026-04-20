@@ -128,6 +128,6 @@ def extract_company_info(soup, sector):
         "Scrip Code": int(scrip_code) if scrip_code and scrip_code.isdigit() else None,
         "Sector": sector,
         "LTP": to_float(table.get("Last Trading Price", "0")),
-        "52 Weeks Moving Range Lowest": to_float(low),
-        "52 Weeks Moving Range Highest": to_float(high),
+        "52 WK Lowest": to_float(low),
+        "52 WK Highest": to_float(high),
     }
