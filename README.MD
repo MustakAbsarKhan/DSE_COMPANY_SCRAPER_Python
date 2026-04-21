@@ -50,7 +50,8 @@ dse_scraper/
 ├── core/
 │   ├── client.py        # HTTP session & retry logic
 │   ├── parser.py        # HTML parsing logic
-│
+│   ├── logger.py        # Logging the process
+│   
 ├── pipelines/
 │   ├── sectors.py       # Fetch sectors
 │   ├── companies.py     # Fetch companies per sector
