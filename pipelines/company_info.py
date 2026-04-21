@@ -1,9 +1,16 @@
 from core.client import AsyncClient
 from core.parser import parse_html, extract_company_info
 
-
 async def get_company_infos(domain, company_urls, sector):
     client = AsyncClient(concurrency=5)
+
+    # ✅ FIXED FILTER
+    company_urls = [
+        url for url in company_urls
+        if "ROBI" in url.upper()
+    ]
+
+    print("Filtered URLs:", company_urls)  # 🔍 DEBUG
 
     full_urls = [domain + url for url in company_urls]
 
@@ -16,7 +23,6 @@ async def get_company_infos(domain, company_urls, sector):
             soup = parse_html(html)
             info = extract_company_info(soup, sector)
 
-            # Skip empty/broken rows
             if info["Company Name"]:
                 data.append(info)
 
