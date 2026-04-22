@@ -44,7 +44,7 @@ def clean_str(x):
 
 
 # =============================
-# SECTOR EXTRACTION
+# ✅ SECTOR EXTRACTION (FIXED)
 # =============================
 def extract_sectors(soup, ignored):
     sectors = []
@@ -54,6 +54,7 @@ def extract_sectors(soup, ignored):
 
         if a:
             name = a.text.strip()
+
             if name not in ignored:
                 sectors.append({
                     "name": name,
@@ -68,12 +69,10 @@ def extract_sectors(soup, ignored):
 # =============================
 def extract_companies(soup):
     links = soup.find_all("a", class_="ab1")
-
     company_links = []
 
     for link in links:
         href = link.get("href")
-
         if href and "displayCompany.php" in href:
             company_links.append(href)
 
@@ -81,21 +80,23 @@ def extract_companies(soup):
 
 
 # =============================
-# GENERIC TABLE PARSER (FIXED)
+# TABLE PARSER
 # =============================
 def extract_table_data(soup):
     data = {}
+    tables = soup.find_all("table", id="company")
 
-    rows = soup.select("#company tr")
+    for table in tables:
+        for row in table.find_all("tr"):
+            ths = row.find_all("th", recursive=False)
+            tds = row.find_all("td", recursive=False)
 
-    for row in rows:
-        ths = row.find_all("th", recursive=False)
-        tds = row.find_all("td", recursive=False)
+            for i in range(min(len(ths), len(tds))):
+                key = ths[i].get_text(strip=True)
+                val = tds[i].get_text(strip=True)
 
-        for i in range(min(len(ths), len(tds))):
-            key = ths[i].get_text(strip=True)
-            val = tds[i].get_text(strip=True)
-            data[key] = val
+                if key:
+                    data[key] = val
 
     return data
 
@@ -113,7 +114,7 @@ def extract_market_date(soup):
 
 
 # =============================
-# TRADING + SCRIP CODE
+# CODES
 # =============================
 def extract_codes(soup):
     trading_code = None
@@ -138,7 +139,7 @@ def extract_codes(soup):
 
 
 # =============================
-# CHANGE PARSER (FIXED)
+# CHANGE
 # =============================
 def extract_change(soup):
     change_value = None
@@ -149,7 +150,6 @@ def extract_change(soup):
 
         if th:
             tr = th.find_parent("tr")
-
             tds = tr.select("td table tr td")
 
             if len(tds) >= 2:
@@ -165,99 +165,104 @@ def extract_change(soup):
 
 
 # =============================
-# 🔥 BASIC INFORMATION PARSER
+# BASIC INFO
 # =============================
 def extract_basic_info(soup):
     data = {}
 
     try:
-        header = soup.find("h2", string=lambda x: x and "Basic Information" in x) 
-
-        if not header:
-            return data
-
+        header = soup.find("h2", string=lambda x: x and "Basic Information" in x)
         table = header.find_next("table")
 
-        if not table:
-            return data
-
-        rows = table.find_all("tr")
-
-        for row in rows:
+        for row in table.find_all("tr"):
             ths = row.find_all("th", recursive=False)
             tds = row.find_all("td", recursive=False)
 
             for i in range(min(len(ths), len(tds))):
-                key = ths[i].get_text(strip=True)
-                val = tds[i].get_text(strip=True)
+                data[ths[i].get_text(strip=True)] = tds[i].get_text(strip=True)
 
-                data[key] = val
-
-    except Exception as e:
-        print("Basic Info Error:", e)
+    except:
+        pass
 
     return data
 
 
 # =============================
-# MAIN COMPANY INFO PARSER
+# EXTRA FIELDS
+# =============================
+def extract_extra_fields(soup):
+    data = {}
+    text = soup.get_text("\n", strip=True)
+
+    agm = re.search(r"Last AGM held on:\s*([0-9\-]+)", text)
+    if agm:
+        data["Last AGM held on"] = agm.group(1)
+
+    year = re.search(r"For the year ended:\s*([A-Za-z0-9, ]+)", text)
+    if year:
+        data["For the year ended"] = year.group(1)
+
+    target_fields = [
+        "Cash Dividend",
+        "Bonus Issue (Stock Dividend)",
+        "Right Issue",
+        "Year End",
+        "Reserve & Surplus without OCI (mn)",
+        "Other Comprehensive Income (OCI) (mn)"
+    ]
+
+    for table in soup.find_all("table", id="company"):
+        for row in table.find_all("tr"):
+            th = row.find("th")
+            td = row.find("td")
+
+            if th and td:
+                key = th.get_text(strip=True)
+
+                if key in target_fields:
+                    data[key] = td.get_text(strip=True)
+
+    return data
+
+
+# =============================
+# MAIN FUNCTION
 # =============================
 def extract_company_info(soup, sector):
     table = extract_table_data(soup)
     basic_info = extract_basic_info(soup)
 
-    # ----------------------------
-    # COMPANY NAME
-    # ----------------------------
     name = None
     try:
         name = soup.find_all("i")[1].text.strip()
     except:
         pass
 
-    # ----------------------------
-    # MARKET DATE
-    # ----------------------------
     market_date = extract_market_date(soup)
 
-    # ----------------------------
-    # RANGE
-    # ----------------------------
     low, high = None, None
-    try:
-        if "52 Weeks' Moving Range" in table:
+    if "52 Weeks' Moving Range" in table:
+        try:
             low, high = table["52 Weeks' Moving Range"].split(" - ")
-    except:
-        pass
+        except:
+            pass
 
     day_low, day_high = None, None
-    try:
-        if "Day's Range" in table:
+    if "Day's Range" in table:
+        try:
             day_low, day_high = table["Day's Range"].split(" - ")
-    except:
-        pass
+        except:
+            pass
 
-    # ----------------------------
-    # CHANGE
-    # ----------------------------
     change_value, change_percent = extract_change(soup)
-
-    # ----------------------------
-    # CODES
-    # ----------------------------
     trading_code, scrip_code = extract_codes(soup)
+    extra = extract_extra_fields(soup)
 
-    # ----------------------------
-    # FINAL STRUCTURE
-    # ----------------------------
     result = {
-        # BASIC
         "Market Date": market_date,
         "Last Update": clean_str(table.get("Last Update")),
-
         "Sector": sector or clean_str(basic_info.get("Sector")),
         "Company Name": clean_str(name),
-
         "Trading Code": clean_str(trading_code),
         "Scrip Code": scrip_code,
 
@@ -265,8 +270,8 @@ def extract_company_info(soup, sector):
         "LTP": to_float(table.get("Last Trading Price")),
         "Opening Price": to_float(table.get("Opening Price")),
         "Closing Price": to_float(table.get("Closing Price")),
-        "Adj Opening Price": to_float(table.get("Adjusted Opening Price")),
         "YCP": to_float(table.get("Yesterday's Closing Price")),
+        "Adj Opening Price": to_float(table.get("Adjusted Opening Price")),
 
         # RANGE
         "Day Low": to_float(day_low),
@@ -274,28 +279,59 @@ def extract_company_info(soup, sector):
         "52W Low": to_float(low),
         "52W High": to_float(high),
 
-        # CHANGE
+        # MOMENTUM
         "Change Value": change_value,
         "Change %": change_percent,
 
-        # VOLUME
+        # LIQUIDITY
         "Day Trade No": to_int(table.get("Day's Trade (Nos.)")),
         "Day Volume": to_int(table.get("Day's Volume (Nos.)")),
         "Day Value (mn)": to_float(table.get("Day's Value (mn)")),
 
-        # MARKET
+        # SIZE
         "Market Cap (mn)": to_float(table.get("Market Capitalization (mn)")),
         "Free Float Cap (mn)": to_float(table.get("Free Float Market Cap. (mn)")),
 
-        # 🔥 BASIC INFORMATION
+        # FUNDAMENTALS
         "Authorized Capital (mn)": to_float(basic_info.get("Authorized Capital (mn)")),
         "Paid-up Capital (mn)": to_float(basic_info.get("Paid-up Capital (mn)")),
+        "Reserve & Surplus without OCI (mn)": None,
+        "Other Comprehensive Income (OCI) (mn)": None,
+
+        # STRUCTURE
         "Face Value": to_float(basic_info.get("Face/par Value")),
         "Market Lot": to_int(basic_info.get("Market Lot")),
         "Total Securities": to_int(basic_info.get("Total No. of Outstanding Securities")),
+
+        # META
         "Debut Trading Date": clean_str(basic_info.get("Debut Trading Date")),
         "Instrument Type": clean_str(basic_info.get("Type of Instrument")),
+
+        # CORPORATE
+        "Last AGM held on": None,
+        "For the year ended": None,
+        "Cash Dividend": None,
+        "Bonus Issue (Stock Dividend)": None,
+        "Right Issue": None,
+        "Year End": None,
     }
 
-    print(result)
-    return result
+    # Merge extra
+    result.update(extra)
+
+    # Convert numeric extra fields
+    for field in [
+        "Reserve & Surplus without OCI (mn)",
+        "Other Comprehensive Income (OCI) (mn)"
+    ]:
+        if field in result:
+            result[field] = to_float(result[field])
+
+    # =============================
+    # FINAL ORDER CONTROL
+    # =============================
+    ordered_keys = list(result.keys())  # already structured logically
+
+    ordered_result = {k: result.get(k) for k in ordered_keys}
+
+    return ordered_result

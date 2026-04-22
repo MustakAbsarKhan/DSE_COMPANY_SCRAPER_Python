@@ -7,3 +7,5 @@ venv/
 env/
 .env/
 
+# Ignore DSECompanyScraper.log
+DSECompanyScraper.log

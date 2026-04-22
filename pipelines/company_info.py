@@ -7,7 +7,7 @@ async def get_company_infos(domain, company_urls, sector):
     # ✅ FIXED FILTER
     company_urls = [
         url for url in company_urls
-        if "ROBI" in url.upper()
+        if "BSCPLC" in url.upper()
     ]
 
     print("Filtered URLs:", company_urls)  # 🔍 DEBUG
