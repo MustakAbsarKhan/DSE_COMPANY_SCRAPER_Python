@@ -188,7 +188,7 @@ def extract_basic_info(soup):
 
 
 # =============================
-# EXTRA FIELDS
+# EXTRA FIELDS - AGM AND OCI DETAILS
 # =============================
 def extract_extra_fields(soup):
     data = {}
@@ -230,6 +230,65 @@ def extract_extra_fields(soup):
     
     return data
 
+# ================================
+# OTHER INFORMATION OF THE COMPANY
+# ================================
+def other_company_info(soup):
+    other_company_data = {}
+    data_fields = [
+        "Listing Year",
+        "Market Category",
+        "Electronic Share",
+    ]
+
+    for table in soup.find_all("table", id="company"):
+        for row in table.find_all("tr"):
+            tds = row.find_all("td")  
+
+            if len(tds) >= 2:
+                key = tds[0].get_text(strip=True)
+                val = tds[1].get_text(strip=True)
+
+                if key in data_fields:
+                    other_company_data[key] = val
+
+    return other_company_data
+# ================================
+# Shareholding INFO OF THE COMPANY
+# ================================
+def parse_shareholding_rows(soup):
+    rows_data = {}
+
+    # Only target rows that contain "Share Holding Percentage"
+    for idx, row in enumerate(soup.find_all("tr")):
+        tds = row.find_all("td", recursive=False)
+        if len(tds) < 2:
+            continue
+
+        key = tds[0].get_text(" ", strip=True)
+
+        if "Share Holding Percentage" in key:
+            val_td = tds[1]
+
+            # Normalize key and append index to avoid duplicates
+            key = " ".join(key.split())
+            if key in rows_data:
+                key = f"{key} ({idx})"
+
+            # Flatten nested table into one string
+            if val_td.find("table"):
+                inner_values = []
+                for inner_td in val_td.find_all("td"):
+                    text = inner_td.get_text(" ", strip=True)
+                    if text:
+                        inner_values.append(text)
+                rows_data[key] = " | ".join(inner_values)
+            else:
+                rows_data[key] = val_td.get_text(" ", strip=True)
+
+    return rows_data
+
+
 
 # =============================
 # MAIN FUNCTION
@@ -263,6 +322,10 @@ def extract_company_info(soup, sector):
     change_value, change_percent = extract_change(soup)
     trading_code, scrip_code = extract_codes(soup)
     extra = extract_extra_fields(soup)
+    other_company_data = other_company_info(soup)
+    shareholding_data = parse_shareholding_rows(soup)
+    
+    
 
     result = {
         "Market Date": market_date,
@@ -310,22 +373,32 @@ def extract_company_info(soup, sector):
         "Total Securities": to_int(basic_info.get("Total No. of Outstanding Securities")),
 
         # META
-        "Debut Trading Date": clean_str(basic_info.get("Debut Trading Date")),
         "Instrument Type": clean_str(basic_info.get("Type of Instrument")),
+        "Debut Trading Date": clean_str(basic_info.get("Debut Trading Date")),
+        "Listing Year": None,
+        "Market Category": None,
+        "Electronic Share": None,
 
         # CORPORATE
         "Last AGM held on": None,
         "For the year ended": None,
         "Last Div Year": None,
+        "Last Div Yield": None,
         "Cash Dividend": None,
         "Bonus Issue (Stock Dividend)": None,
-        "Last Div Yield": None,
         "Right Issue": None,
         "Year End": None,
+        
+        # SHAREHOLDING INFORMATION
+        "Share Holding Percentage [as on Jun 30, 2025 (year ended)]": None,
+        "Share Holding Percentage [as on Feb 28, 2026]":None,
+        "Share Holding Percentage [as on Mar 31, 2026]":None
     }
 
     # Merge extra
     result.update(extra)
+    result.update(other_company_data)
+    result.update(shareholding_data)
 
     # Convert numeric extra fields
     for field in [
