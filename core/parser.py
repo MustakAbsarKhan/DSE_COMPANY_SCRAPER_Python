@@ -328,7 +328,7 @@ def extract_company_info(soup, sector):
             result[field] = to_float(result[field])
 
     # =============================
-    # FINAL ORDER CONTROL
+    # PURPOSE BASED FINAL ORDER CONTROL
     # =============================
     ordered_keys = list(result.keys())  # already structured logically
 
