@@ -208,8 +208,14 @@ def extract_extra_fields(soup):
         "Right Issue",
         "Year End",
         "Reserve & Surplus without OCI (mn)",
-        "Other Comprehensive Income (OCI) (mn)"
+        "Other Comprehensive Income (OCI) (mn)",
     ]
+
+    shrink = (soup.find_all(class_='shrink'))[-1]
+    div_info = shrink.findAll('td')
+    data["Last Div Year"] = div_info[0].text.strip()
+    data["Last Div Yield"] = div_info[-1].text.strip()
+    
 
     for table in soup.find_all("table", id="company"):
         for row in table.find_all("tr"):
@@ -221,7 +227,7 @@ def extract_extra_fields(soup):
 
                 if key in target_fields:
                     data[key] = td.get_text(strip=True)
-
+    
     return data
 
 
@@ -310,8 +316,10 @@ def extract_company_info(soup, sector):
         # CORPORATE
         "Last AGM held on": None,
         "For the year ended": None,
+        "Last Div Year": None,
         "Cash Dividend": None,
         "Bonus Issue (Stock Dividend)": None,
+        "Last Div Yield": None,
         "Right Issue": None,
         "Year End": None,
     }
