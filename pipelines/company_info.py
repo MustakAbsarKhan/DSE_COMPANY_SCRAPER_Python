@@ -4,7 +4,7 @@ from core.parser import parse_html, extract_company_info
 async def get_company_infos(domain, company_urls, sector):
     client = AsyncClient(concurrency=5)
 
-    # ✅ FIXED FILTER
+    # ✅ Temporary FILTER - To Be Deleted
     company_urls = [
         url for url in company_urls
         if "BSCPLC" in url.upper()
