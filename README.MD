@@ -155,7 +155,7 @@ python main.py
 
 ## 📦 Output
 
-* Generates: `DSE_Company_Details.xlsx` (structured Excel dataset)
+* Generates: `Export_Data/DSE_Data_{Market_Date}.xlsx` (structured Excel dataset with date-based filename)
 * Generates: `DSECompanyScraper.log` (detailed execution logs)
 * Ready for financial analysis and data processing
 

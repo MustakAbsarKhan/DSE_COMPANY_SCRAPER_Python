@@ -10,7 +10,7 @@ async def get_company_infos(domain, company_urls, sector):
     #     if "BSCPLC" in url.upper()
     # ]
 
-    print("Filtered URLs:", company_urls)  # 🔍 DEBUG
+    # print("Filtered URLs:", company_urls)  # 🔍 DEBUG
 
     full_urls = [domain + url for url in company_urls]
 
