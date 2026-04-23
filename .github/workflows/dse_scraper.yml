@@ -2,20 +2,21 @@ name: DSE Scraper
 
 on:
   schedule:
-    # Run at 8 PM Dhaka time (14:00 UTC), only Sunday–Thursday
     - cron: "50 16 * * 0-4"
-  workflow_dispatch: # allows manual trigger
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # opt into Node.js 24 globally
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4 # updated to Node.js 24 compatible
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # updated to Node.js 24 compatible
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -26,7 +27,7 @@ jobs:
         run: python main.py
 
       - name: Upload Excel output
-        uses: actions/upload-artifact@v4 # updated to Node.js 24 compatible
+        uses: actions/upload-artifact@v4
         with:
           name: dse-data
           path: Export_Data/*.xlsx

@@ -12,13 +12,15 @@ on:
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # opt into Node.js 24 now
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4   # Node.js 24 compatible
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5   # Node.js 24 compatible
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -31,7 +33,7 @@ jobs:
           python main.py
 
       - name: Upload Excel output
-        uses: actions/upload-artifact@v4   # Node.js 24 compatible
+        uses: actions/upload-artifact@v4
         with:
           name: dse-data-${{ inputs.run_date }}
           path: Export_Data/*.xlsx
