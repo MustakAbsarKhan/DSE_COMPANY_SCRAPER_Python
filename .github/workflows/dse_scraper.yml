@@ -2,7 +2,7 @@ name: DSE Scraper
 
 on:
   schedule:
-    - cron: "50 16 * * 0-4"
+    - cron: "20 17 * * 0-4"
   workflow_dispatch:
 
 env:
