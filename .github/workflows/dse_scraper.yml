@@ -2,8 +2,8 @@ name: DSE Scraper
 
 on:
   schedule:
-    # Run every day at 8 PM Dhaka time (UTC+6 → 14:00 UTC)
-    - cron: "0 14 * * *"
+    # Run at 8 PM Dhaka time (14:00 UTC), only Sunday–Thursday
+    - cron: "0 14 * * 0-4"
   workflow_dispatch: # allows manual trigger
 
 jobs:
