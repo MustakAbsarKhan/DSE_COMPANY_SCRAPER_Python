@@ -9,6 +9,40 @@ from pipelines.company_info import get_company_infos
 from export.excel import save_to_excel
 
 
+# =========================
+# PROCESS SINGLE SECTOR
+# =========================
+async def process_sector(sector):
+    print(f"\n🔹 Processing Sector: {sector['name']}")
+
+    # STEP 1: GET COMPANIES
+    companies = await get_companies(DOMAIN, sector["url"])
+    company_count = len(companies)
+
+    # print(f"   ➤ Companies Found: {company_count}")
+
+    # STEP 2: SCRAPE COMPANY DATA
+    sector_data = await get_company_infos(
+        DOMAIN,
+        companies,
+        sector["name"]
+    )
+
+    scraped_count = len(sector_data)
+
+    print(f"   ✔ Companies Scraped: {scraped_count}")
+
+    return {
+        "sector": sector["name"],
+        "found": company_count,
+        "scraped": scraped_count,
+        "data": sector_data
+    }
+
+
+# =========================
+# MAIN
+# =========================
 async def main():
     all_data = []
 
@@ -29,40 +63,31 @@ async def main():
     print("=" * 60)
 
     # =========================
-    # LOOP THROUGH SECTORS
+    # 🔥 CONCURRENT SECTOR PROCESSING
     # =========================
-    for sector in sectors:
-        print(f"\n🔹 Processing Sector: {sector['name']}")
+    semaphore = asyncio.Semaphore(3)  # 🔥 CONTROL PARALLEL SECTORS
 
-        # =========================
-        # STEP 2: GET COMPANIES
-        # =========================
-        companies = await get_companies(DOMAIN, sector["url"])
+    async def sem_task(sector):
+        async with semaphore:
+            return await process_sector(sector)
 
-        sector_company_count = len(companies)
-        total_companies_found += sector_company_count
+    tasks = [sem_task(sector) for sector in sectors]
 
-        print(f"   ➤ Companies Found: {sector_company_count}")
+    # 🔥 PRESERVES ORDER
+    results = await asyncio.gather(*tasks)
 
-        # =========================
-        # STEP 3: SCRAPE COMPANIES
-        # =========================
-        sector_data = await get_company_infos(
-            DOMAIN,
-            companies,
-            sector["name"]
-        )
-
-        scraped_count = len(sector_data)
-        total_companies_scraped += scraped_count
+    # =========================
+    # COLLECT RESULTS
+    # =========================
+    for result in results:
         total_sectors_scraped += 1
+        total_companies_found += result["found"]
+        total_companies_scraped += result["scraped"]
 
-        print(f"   ✔ Companies Scraped: {scraped_count}")
-
-        all_data.extend(sector_data)
+        all_data.extend(result["data"])
 
     # =========================
-    # STEP 4: SAVE DATA
+    # SAVE DATA
     # =========================
     save_to_excel(all_data)
 

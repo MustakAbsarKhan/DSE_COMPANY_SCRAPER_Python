@@ -213,8 +213,8 @@ def extract_extra_fields(soup):
 
     shrink = (soup.find_all(class_='shrink'))[-1]
     div_info = shrink.findAll('td')
-    data["Last Div Year"] = div_info[0].text.strip()
-    data["Last Div Yield"] = div_info[-1].text.strip()
+    data["Last Div Year"] = int(div_info[0].text.strip())
+    data["Last Div Yield %"] = to_float(div_info[-1].text.strip())
     
 
     for table in soup.find_all("table", id="company"):
@@ -383,7 +383,7 @@ def extract_company_info(soup, sector):
         "Last AGM held on": None,
         "For the year ended": None,
         "Last Div Year": None,
-        "Last Div Yield": None,
+        "Last Div Yield %": None,
         "Cash Dividend": None,
         "Bonus Issue (Stock Dividend)": None,
         "Right Issue": None,
@@ -398,8 +398,9 @@ def extract_company_info(soup, sector):
     # Merge extra
     result.update(extra)
     result.update(other_company_data)
+    result["Listing Year"] = to_int(result.get("Listing Year"))
     result.update(shareholding_data)
-
+    
     # Convert numeric extra fields
     for field in [
         "Reserve & Surplus without OCI (mn)",
