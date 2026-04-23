@@ -25,6 +25,7 @@ This project demonstrates **advanced Python engineering practices**, including *
 * 📊 **Structured Data Output** (Excel via Pandas)
 * 🛠️ **Production-Ready Logging System**
 * 🚀 **Concurrency Control** for optimal performance
+* 🏖️ **Smart Holiday Detection** (automatically skips on holidays/weekends)
 
 ---
 
@@ -52,6 +53,7 @@ dse_scraper/
 │
 ├── core/
 │   ├── client.py        # Async HTTP client with rate limiting
+│   ├── holidays.py      # Holiday & weekend detection
 │   ├── parser.py        # HTML parsing & data extraction
 │   ├── logger.py        # Logging configuration
 │
@@ -151,6 +153,14 @@ pip install -r requirements.txt
 python main.py
 ```
 
+### 4. Automated Execution (GitHub Actions)
+
+The scraper includes a GitHub Actions workflow (`.github/workflows/dse_scraper.yml`) that:
+- Runs automatically every Sunday-Thursday at 8 PM Dhaka time (14:00 UTC)
+- Can be triggered manually via GitHub UI
+- Automatically checks for holidays/weekends and exits gracefully
+- Uploads generated Excel files as workflow artifacts
+
 ---
 
 ## 📦 Output
@@ -163,7 +173,15 @@ python main.py
 
 ## 🔄 Version History
 
-### 🔹 v2.0 (Current)
+### 🔹 v2.1 (Current)
+
+* **Smart Holiday Detection**: Automatically checks for public holidays and weekends before scraping
+* **Graceful Exit**: Skips execution on non-trading days with informative messages
+* **Official Holiday Data**: Fetches current holiday calendar from DSE website
+* **Weekend Recognition**: Respects Bangladesh weekend (Friday-Saturday)
+* **Multi-day Holiday Support**: Handles holiday ranges (e.g., Eid-ul-Fitr 7-day period)
+
+### 🔹 v2.0
 
 * **Asynchronous Architecture**: Implemented async scraping with aiohttp for high performance
 * **Advanced Rate Limiting**: Adaptive rate limiter with jitter and concurrency control
