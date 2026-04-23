@@ -1,0 +1,24 @@
+name: DSE Scraper
+
+on:
+  schedule:
+    - cron: "0 14 * * *" # Runs every day at 8 PM UTC
+  workflow_dispatch: # Allows manual trigger too
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        run: python main.py
