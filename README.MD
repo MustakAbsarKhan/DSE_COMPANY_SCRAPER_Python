@@ -9,36 +9,39 @@
 
 ## 🚀 Overview
 
-A **production-ready, modular pipeline-based web scraper** designed to extract structured company data from the Dhaka Stock Exchange (DSE).
+A **production-ready, asynchronous pipeline-based web scraper** designed to extract comprehensive company data from the Dhaka Stock Exchange (DSE) with high performance and reliability.
 
-This project demonstrates **clean architecture, scalable design, and real-world scraping practices**, making it suitable for both **portfolio showcasing and freelancing work**.
+This project demonstrates **advanced Python engineering practices**, including **async programming, modular architecture, and real-world scraping techniques**, making it suitable for both **portfolio showcasing and production deployments**.
 
 ---
 
 ## 🧠 Key Highlights
 
-* 🔄 **Pipeline-Based Architecture** (step-by-step data flow)
+* 🔄 **Asynchronous Pipeline-Based Architecture** (concurrent data flow)
 * 🧩 **Modular Design** (clean separation of concerns)
-* 🔁 **Retry Mechanism** for resilient scraping
-* ⚡ **Efficient Data Extraction** using BeautifulSoup
-* 📦 **Structured Data Output** (Excel via Pandas)
-* 🛠️ **Maintainable & Scalable Codebase**
+* 🔁 **Adaptive Rate Limiting & Retry Mechanism** for resilient scraping
+* ⚡ **High-Performance Async Scraping** using aiohttp
+* 📦 **Comprehensive Data Extraction** (40+ financial metrics)
+* 📊 **Structured Data Output** (Excel via Pandas)
+* 🛠️ **Production-Ready Logging System**
+* 🚀 **Concurrency Control** for optimal performance
 
 ---
 
 ## 🏗️ Architecture
 
 ```bash
-main.py
+main.py (Async Orchestrator)
    ↓
-sectors pipeline
+Concurrent Sector Processing (Semaphore-controlled)
    ↓
-companies pipeline
+sectors pipeline → companies pipeline → company info pipeline
    ↓
-company info pipeline
-   ↓
-export module
+export module (Excel Output)
 ```
+
+### Execution Flow
+![Execution Flow](Execution Flow.jpg)
 
 ---
 
@@ -48,21 +51,23 @@ export module
 dse_scraper/
 │
 ├── core/
-│   ├── client.py        # HTTP session & retry logic
-│   ├── parser.py        # HTML parsing logic
-│   ├── logger.py        # Logging the process
-│   
+│   ├── client.py        # Async HTTP client with rate limiting
+│   ├── parser.py        # HTML parsing & data extraction
+│   ├── logger.py        # Logging configuration
+│
 ├── pipelines/
 │   ├── sectors.py       # Fetch sectors
 │   ├── companies.py     # Fetch companies per sector
-│   ├── company_info.py  # Extract company data
+│   ├── company_info.py  # Extract detailed company data
 │
 ├── export/
 │   ├── excel.py         # Export data to Excel
 │
-├── config.py            # Configurations
-├── main.py              # Entry point
-├── requirements.txt
+├── config.py            # Configuration settings
+├── main.py              # Async entry point
+├── requirements.txt     # Python dependencies
+├── .gitignore           # Git ignore rules
+├── Execution Flow.jpg   # Architecture diagram
 └── README.md
 ```
 
@@ -70,27 +75,58 @@ dse_scraper/
 
 ## 📊 Data Extracted
 
-The scraper collects the following:
+The scraper collects comprehensive company data including:
 
+### Basic Information
 * Company Name
 * Trading Code
+* Scrip Code
 * Sector
-* Last Traded Price (LTP)
-* 52 Week Low & High
-* Last Dividend Year
-* Dividend %
-* Dividend Yield
+* Instrument Type
+
+### Pricing & Trading
+* Last Trading Price (LTP)
+* Opening Price
+* Closing Price
+* Yesterday's Closing Price (YCP)
+* Adjusted Opening Price
+* Day's Range (Low/High)
+* 52 Weeks' Moving Range (Low/High)
+* Change Value & Percentage
+
+### Liquidity & Volume
+* Day's Trade (Number)
+* Day's Volume
+* Day's Value (mn)
+
+### Market Metrics
+* Market Capitalization (mn)
+* Free Float Market Cap (mn)
+* Authorized Capital (mn)
+* Paid-up Capital (mn)
+* Face/Par Value
+* Market Lot
+* Total Outstanding Securities
+
+### Corporate Information
+* Debut Trading Date
+* Last AGM Date
+* Dividend Information (Year, Yield %, Cash, Bonus, Right Issue)
+* Year End
+
+### Shareholding Data
+* Share Holding Percentages (as on specific dates)
 
 ---
 
 ## ⚙️ Tech Stack
 
-* **Python**
-* **Requests** (HTTP handling)
+* **Python** (asyncio for asynchronous operations)
+* **aiohttp** (asynchronous HTTP handling)
 * **BeautifulSoup (bs4)** (HTML parsing)
 * **Pandas** (data processing & export)
 * **openpyxl** (Excel engine)
-* **tqdm** (progress visualization)
+* **lxml** (XML/HTML parser)
 
 ---
 
@@ -119,8 +155,9 @@ python main.py
 
 ## 📦 Output
 
-* Generates: `DSE_Company_Details.xlsx`
-* Structured, clean dataset ready for analysis
+* Generates: `DSE_Company_Details.xlsx` (structured Excel dataset)
+* Generates: `DSECompanyScraper.log` (detailed execution logs)
+* Ready for financial analysis and data processing
 
 ---
 
@@ -128,13 +165,13 @@ python main.py
 
 ### 🔹 v2.0 (Current)
 
-* Refactored into **pipeline-based modular architecture**
-* Improved maintainability and scalability
-* Separated parsing, networking, and processing logic
-
-### 🔹 v1.0
-
-* Initial monolithic scraper implementation
+* **Asynchronous Architecture**: Implemented async scraping with aiohttp for high performance
+* **Advanced Rate Limiting**: Adaptive rate limiter with jitter and concurrency control
+* **Comprehensive Logging**: Production-ready logging system with file and console output
+* **Extended Data Fields**: Expanded to 40+ financial and corporate metrics
+* **Refactored into pipeline-based modular architecture**
+* **Improved maintainability and scalability**
+* **Separated parsing, networking, and processing logic**
 
 ---
 
@@ -149,11 +186,11 @@ python main.py
 
 ## 🚧 Future Improvements
 
-* Async scraping (aiohttp) for performance boost
-* Proxy rotation support
+* Proxy rotation support for enhanced anonymity
 * CLI arguments for customization
-* Logging system for production debugging
 * API-based data serving
+* Database integration for data persistence
+* Web dashboard for monitoring
 
 ---
 
