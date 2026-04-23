@@ -8,6 +8,8 @@ from pipelines.company_info import get_company_infos
 
 from export.excel import save_to_excel
 
+from core.holidays import holiday_checker
+
 
 # =========================
 # PROCESS SINGLE SECTOR
@@ -44,6 +46,11 @@ async def process_sector(sector):
 # MAIN
 # =========================
 async def main():
+    # 🔥 HOLIDAY CHECK - FIRST PRIORITY
+    is_holiday = await holiday_checker.check_and_exit_if_holiday()
+    if is_holiday:
+        return
+
     all_data = []
 
     total_sectors_found = 0
