@@ -1,0 +1,37 @@
+name: Manual Scraper
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_date:
+        description: 'Optional date tag for the run (YYYY-MM-DD)'
+        default: 'manual'
+        required: false
+        type: string
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4   # Node.js 24 compatible
+
+      - name: Set up Python
+        uses: actions/setup-python@v5   # Node.js 24 compatible
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pandas openpyxl
+
+      - name: Run scraper
+        run: |
+          echo "Running scraper for input date: ${{ inputs.run_date }}"
+          python main.py
+
+      - name: Upload Excel output
+        uses: actions/upload-artifact@v4   # Node.js 24 compatible
+        with:
+          name: dse-data-${{ inputs.run_date }}
+          path: Export_Data/*.xlsx
