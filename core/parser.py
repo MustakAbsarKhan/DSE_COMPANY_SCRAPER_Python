@@ -288,7 +288,32 @@ def parse_shareholding_rows(soup):
 
     return rows_data
 
+# Extract Audited EPS and Unaudited EPS for Continuing Operations
+def extract_epss(soup):
+    data = {}
+    table = soup.find_all("table", id="company")[4]
 
+    periods = ["Q1", "Q2", "HalfYearly", "Q3", "9Months", "Annual"]
+
+    # --- First EPS section ---
+    eps_header = table.find("td", string=lambda t: t and "Earnings Per Share (EPS)" in t)
+    if eps_header:
+        basic_row = eps_header.find_parent("tr").find_next_sibling("tr")
+        if basic_row:
+            values = [to_float(td.get_text(strip=True)) for td in basic_row.find_all("td")[1:]]
+            for label, val in zip(periods, values):
+                data[f"{label}_EPS"] = val
+
+    # --- Continuing operations EPS section ---
+    eps_cop_header = table.find("td", string=lambda t: t and "Earnings Per Share (EPS) - continuing operations" in t)
+    if eps_cop_header:
+        basic_row = eps_cop_header.find_parent("tr").find_next_sibling("tr")
+        if basic_row:
+            values = [to_float(td.get_text(strip=True)) for td in basic_row.find_all("td")[1:]]
+            for label, val in zip(periods, values):
+                data[f"{label}_EPS_COP"] = val
+
+    return data
 
 # =============================
 # MAIN FUNCTION
@@ -323,8 +348,9 @@ def extract_company_info(soup, sector):
     trading_code, scrip_code = extract_codes(soup)
     extra = extract_extra_fields(soup)
     other_company_data = other_company_info(soup)
+    extracted_eps = extract_epss(soup)
     shareholding_data = parse_shareholding_rows(soup)
-    
+
     
 
     result = {
@@ -366,6 +392,9 @@ def extract_company_info(soup, sector):
         "Paid-up Capital (mn)": to_float(basic_info.get("Paid-up Capital (mn)")),
         "Reserve & Surplus without OCI (mn)": None,
         "Other Comprehensive Income (OCI) (mn)": None,
+        
+        #EPS & PE Ratios
+        **extracted_eps,
 
         # STRUCTURE
         "Face Value": to_float(basic_info.get("Face/par Value")),
@@ -391,15 +420,18 @@ def extract_company_info(soup, sector):
         
         # SHAREHOLDING INFORMATION
         "Share Holding Percentage [as on Jun 30, 2025 (year ended)]": None,
-        "Share Holding Percentage [as on Feb 28, 2026]":None,
-        "Share Holding Percentage [as on Mar 31, 2026]":None
+        "Share Holding Percentage [as on Dec 31, 2025 (year ended)]": None,
+        "Share Holding Percentage [as on Feb 28, 2026]": None,
+        "Share Holding Percentage [as on Mar 31, 2026]": None
     }
 
     # Merge extra
     result.update(extra)
     result.update(other_company_data)
     result["Listing Year"] = to_int(result.get("Listing Year"))
+    result.update(extracted_eps)
     result.update(shareholding_data)
+   
     
     # Convert numeric extra fields
     for field in [
