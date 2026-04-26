@@ -314,7 +314,9 @@ def extract_epss(soup):
                 data[f"{label}_EPS_COP"] = val
 
     return data
-def extract_unaud_pe(soup):
+
+
+def extracted_pe(soup):
     """
     Extract unaudited and audited P/E ratios (Basic, Diluted, Trailing) 
     from the HTML tables with id="company".
@@ -412,89 +414,117 @@ def extract_company_info(soup, sector):
     extra = extract_extra_fields(soup)
     other_company_data = other_company_info(soup)
     extracted_eps = extract_epss(soup)
-    extract_unaudited_pe = extract_unaud_pe(soup)
+    extracted_pe_data = extracted_pe(soup)
     shareholding_data = parse_shareholding_rows(soup)
     
-
+    
     result = {
-        "Market Date": market_date,
-        "Last Update": clean_str(table.get("Last Update")),
-        "Sector": sector or clean_str(basic_info.get("Sector")),
-        "Company Name": clean_str(name),
-        "Trading Code": clean_str(trading_code),
-        "Scrip Code": scrip_code,
+    # =============================
+    # 🟢 IDENTIFICATION
+    # =============================
+    "Company Name": clean_str(name),
+    "Trading Code": clean_str(trading_code),
+    "Scrip Code": scrip_code,
+    "Sector": sector or clean_str(basic_info.get("Sector")),
 
-        # PRICE
-        "LTP": to_float(table.get("Last Trading Price")),
-        "Opening Price": to_float(table.get("Opening Price")),
-        "Closing Price": to_float(table.get("Closing Price")),
-        "YCP": to_float(table.get("Yesterday's Closing Price")),
-        "Adj Opening Price": to_float(table.get("Adjusted Opening Price")),
+    "Market Date": market_date,
+    "Last Update": clean_str(table.get("Last Update")),
 
-        # RANGE
-        "Day Low": to_float(day_low),
-        "Day High": to_float(day_high),
-        "52W Low": to_float(low),
-        "52W High": to_float(high),
 
-        # MOMENTUM
-        "Change Value": change_value,
-        "Change %": change_percent,
+    # =============================
+    # 🟢 PRICE (CORE MARKET DATA)
+    # =============================
+    "LTP": to_float(table.get("Last Trading Price")),
+    "Opening Price": to_float(table.get("Opening Price")),
+    "Closing Price": to_float(table.get("Closing Price")),
+    "YCP": to_float(table.get("Yesterday's Closing Price")),
+    "Adj Opening Price": to_float(table.get("Adjusted Opening Price")),
 
-        # LIQUIDITY
-        "Day Trade No": to_int(table.get("Day's Trade (Nos.)")),
-        "Day Volume": to_int(table.get("Day's Volume (Nos.)")),
-        "Day Value (mn)": to_float(table.get("Day's Value (mn)")),
 
-        # SIZE
-        "Market Cap (mn)": to_float(table.get("Market Capitalization (mn)")),
-        "Free Float Cap (mn)": to_float(table.get("Free Float Market Cap. (mn)")),
+    # =============================
+    # 🟢 RANGE
+    # =============================
+    "Day Low": to_float(day_low),
+    "Day High": to_float(day_high),
+    "52W Low": to_float(low),
+    "52W High": to_float(high),
 
-        # FUNDAMENTALS
-        "Authorized Capital (mn)": to_float(basic_info.get("Authorized Capital (mn)")),
-        "Paid-up Capital (mn)": to_float(basic_info.get("Paid-up Capital (mn)")),
-        "Reserve & Surplus without OCI (mn)": None,
-        "Other Comprehensive Income (OCI) (mn)": None,
-        
-        #EPS & PE Ratios
-        **extracted_eps,
-        **extract_unaudited_pe,
 
-        # STRUCTURE
-        "Face Value": to_float(basic_info.get("Face/par Value")),
-        "Market Lot": to_int(basic_info.get("Market Lot")),
-        "Total Securities": to_int(basic_info.get("Total No. of Outstanding Securities")),
+    # =============================
+    # 🟢 MOMENTUM
+    # =============================
+    "Change Value": change_value,
+    "Change %": change_percent,
 
-        # META
-        "Instrument Type": clean_str(basic_info.get("Type of Instrument")),
-        "Debut Trading Date": clean_str(basic_info.get("Debut Trading Date")),
-        "Listing Year": None,
-        "Market Category": None,
-        "Electronic Share": None,
 
-        # CORPORATE
-        "Last AGM held on": None,
-        "For the year ended": None,
-        "Last Div Year": None,
-        "Last Div Yield %": None,
-        "Cash Dividend": None,
-        "Bonus Issue (Stock Dividend)": None,
-        "Right Issue": None,
-        "Year End": None,
-        
-        # SHAREHOLDING INFORMATION
-        "Share Holding Percentage [as on Dec 31, 2025 (year ended)]": None,
-        "Share Holding Percentage [as on Jun 30, 2025 (year ended)]": None,
-        "Share Holding Percentage [as on Mar 31, 2026]": None,
-        "Share Holding Percentage [as on Feb 28, 2026]": None,
+    # =============================
+    # 🔵 LIQUIDITY
+    # =============================
+    "Day Trade No": to_int(table.get("Day's Trade (Nos.)")),
+    "Day Volume": to_int(table.get("Day's Volume (Nos.)")),
+    "Day Value (mn)": to_float(table.get("Day's Value (mn)")),
+
+
+    # =============================
+    # 🔵 SIZE
+    # =============================
+    "Market Cap (mn)": to_float(table.get("Market Capitalization (mn)")),
+    "Free Float Cap (mn)": to_float(table.get("Free Float Market Cap. (mn)")),
+
+
+    # =============================
+    # 🟡 FUNDAMENTALS
+    # =============================
+    "Authorized Capital (mn)": to_float(basic_info.get("Authorized Capital (mn)")),
+    "Paid-up Capital (mn)": to_float(basic_info.get("Paid-up Capital (mn)")),
+    "Reserve & Surplus without OCI (mn)": None,
+    "Other Comprehensive Income (OCI) (mn)": None,
+
+
+    # =============================
+    # 🔴 VALUATION (EPS + P/E)
+    # =============================
+    **extracted_eps,
+    **extracted_pe_data,
+
+
+    # =============================
+    # 🟡 STRUCTURE
+    # =============================
+    "Face Value": to_float(basic_info.get("Face/par Value")),
+    "Market Lot": to_int(basic_info.get("Market Lot")),
+    "Total Securities": to_int(basic_info.get("Total No. of Outstanding Securities")),
+
+
+    # =============================
+    # 🟣 CORPORATE ACTIONS
+    # =============================
+    "Last AGM held on": None,
+    "For the year ended": None,
+    "Last Div Year": None,
+    "Last Div Yield %": None,
+    "Cash Dividend": None,
+    "Bonus Issue (Stock Dividend)": None,
+    "Right Issue": None,
+    "Year End": None,
+
+
+    # =============================
+    # ⚫ META
+    # =============================
+    "Instrument Type": clean_str(basic_info.get("Type of Instrument")),
+    "Debut Trading Date": clean_str(basic_info.get("Debut Trading Date")),
+    "Listing Year": None,
+    "Market Category": None,
+    "Electronic Share": None,
     }
-
+    
     # Merge extra
     result.update(extra)
     result.update(other_company_data)
     result["Listing Year"] = to_int(result.get("Listing Year"))
     result.update(extracted_eps)
-    result.update(extract_unaudited_pe)
+    result.update(extracted_pe_data)
     result.update(shareholding_data)
    
     
