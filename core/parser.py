@@ -314,7 +314,70 @@ def extract_epss(soup):
                 data[f"{label}_EPS_COP"] = val
 
     return data
+def extract_unaud_pe(soup):
+    """
+    Extract unaudited and audited P/E ratios (Basic, Diluted, Trailing) 
+    from the HTML tables with id="company".
 
+    Returns:
+        dict: Combined dictionary of all extracted values with 
+              date-based keys and descriptive suffixes.
+    """
+
+    # -----------------------------
+    # UNAUDITED TABLE (index 5)
+    # -----------------------------
+    table_unaudited = soup.find_all("table", id="company")[5]
+    tds_unaudited = table_unaudited.find_all("td")
+
+    # Extract date headers (first row, skip the first cell "Particulars")
+    date_keys = [td.get_text(strip=True) for td in tds_unaudited[1:7]]
+
+    # --- Basic EPS P/E values ---
+    data_pe_basic = {}
+    pe_basic_values = [td.get_text(strip=True) for td in tds_unaudited[8:14]]
+    for date, val in zip(date_keys, pe_basic_values):
+        key = f"{date}_PEwBasEPS"
+        data_pe_basic[key] = to_float(val)
+
+    # --- Diluted EPS P/E values ---
+    data_pe_diluted = {}
+    pe_diluted_values = [td.get_text(strip=True) for td in tds_unaudited[15:21]]
+    for date, val in zip(date_keys, pe_diluted_values):
+        key = f"{date}_PEwDilutEPS"
+        data_pe_diluted[key] = to_float(val)
+
+    # --- Trailing P/E Ratio ---
+    data_petrail_ratio = {}
+    pe_trailing_values = [td.get_text(strip=True) for td in tds_unaudited[22:28]]
+    for date, val in zip(date_keys, pe_trailing_values):
+        key = f"{date}_PEwTrailRatio"
+        data_petrail_ratio[key] = to_float(val)
+
+    # -----------------------------
+    # AUDITED TABLE (index 6)
+    # -----------------------------
+    table_audited = soup.find_all("table", id="company")[6]
+    tds_audited = table_audited.find_all("td")
+
+    # --- Audited Basic EPS P/E values ---
+    data_audited_pe_basic = {}
+    pe_audited_basic_values = [td.get_text(strip=True) for td in tds_audited[8:14]]
+    for date, val in zip(date_keys, pe_audited_basic_values):
+        key = f"{date}_PEwAuditBascEPS"
+        data_audited_pe_basic[key] = to_float(val)
+
+    # -----------------------------
+    # MERGE ALL RESULTS
+    # -----------------------------
+    return {
+        **data_pe_basic,
+        **data_pe_diluted,
+        **data_petrail_ratio,
+        **data_audited_pe_basic
+    }
+
+    
 # =============================
 # MAIN FUNCTION
 # =============================
@@ -349,8 +412,8 @@ def extract_company_info(soup, sector):
     extra = extract_extra_fields(soup)
     other_company_data = other_company_info(soup)
     extracted_eps = extract_epss(soup)
+    extract_unaudited_pe = extract_unaud_pe(soup)
     shareholding_data = parse_shareholding_rows(soup)
-
     
 
     result = {
@@ -395,6 +458,7 @@ def extract_company_info(soup, sector):
         
         #EPS & PE Ratios
         **extracted_eps,
+        **extract_unaudited_pe,
 
         # STRUCTURE
         "Face Value": to_float(basic_info.get("Face/par Value")),
@@ -419,10 +483,10 @@ def extract_company_info(soup, sector):
         "Year End": None,
         
         # SHAREHOLDING INFORMATION
-        "Share Holding Percentage [as on Jun 30, 2025 (year ended)]": None,
         "Share Holding Percentage [as on Dec 31, 2025 (year ended)]": None,
+        "Share Holding Percentage [as on Jun 30, 2025 (year ended)]": None,
+        "Share Holding Percentage [as on Mar 31, 2026]": None,
         "Share Holding Percentage [as on Feb 28, 2026]": None,
-        "Share Holding Percentage [as on Mar 31, 2026]": None
     }
 
     # Merge extra
@@ -430,6 +494,7 @@ def extract_company_info(soup, sector):
     result.update(other_company_data)
     result["Listing Year"] = to_int(result.get("Listing Year"))
     result.update(extracted_eps)
+    result.update(extract_unaudited_pe)
     result.update(shareholding_data)
    
     
