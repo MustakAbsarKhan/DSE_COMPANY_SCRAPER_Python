@@ -1,31 +1,58 @@
-# 📊 DSE Company Data Scraper
+
+---
+# 📊 DSE Company Data Scraper — Institutional-Grade Data Pipeline
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![Status](https://img.shields.io/badge/Status-Active-success)
-![Architecture](https://img.shields.io/badge/Architecture-Pipeline%20%7C%20Modular-informational)
+![Async](https://img.shields.io/badge/Async-Enabled-success)
+![Architecture](https://img.shields.io/badge/Architecture-Pipeline%20%7C%20Resilient-informational)
+![Scraping](https://img.shields.io/badge/Scraping-Robust%20%26%20Fault--Tolerant-orange)
+![Data Quality](https://img.shields.io/badge/Data-Structured%20%26%20Clean-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
 ## 🚀 Overview
 
-A **production-ready, asynchronous pipeline-based web scraper** designed to extract comprehensive company data from the Dhaka Stock Exchange (DSE) with high performance and reliability.
+A **high-performance, fault-tolerant, asynchronous data pipeline** for extracting structured company-level financial data from the Dhaka Stock Exchange (DSE).
 
-This project demonstrates **advanced Python engineering practices**, including **async programming, modular architecture, and real-world scraping techniques**, making it suitable for both **portfolio showcasing and production deployments**.
+> ⚠️ DSE pages are **inconsistent, non-standardized, and structurally unstable**
+> ✅ This project is engineered specifically to **handle real-world HTML unpredictability**
+
+This is not a basic scraper — it is a **resilient data engineering system** designed to operate reliably under messy, changing web structures.
 
 ---
 
-## 🧠 Key Highlights
+## 🧠 What Makes This Different
 
-* 🔄 **Asynchronous Pipeline-Based Architecture** (concurrent data flow)
-* 🧩 **Modular Design** (clean separation of concerns)
-* 🔁 **Adaptive Rate Limiting & Retry Mechanism** for resilient scraping
-* ⚡ **High-Performance Async Scraping** using aiohttp
-* 📦 **Comprehensive Data Extraction** (40+ financial metrics)
-* 📊 **Structured Data Output** (Excel via Pandas)
-* 🛠️ **Production-Ready Logging System**
-* 🚀 **Concurrency Control** for optimal performance
-* 🏖️ **Smart Holiday Detection** (automatically skips on holidays/weekends)
+### 🛡️ Built for Unreliable HTML (Core Upgrade)
+
+Unlike traditional scrapers that break when layouts change, this system:
+
+* 🔍 Uses **multi-layer parsing strategies**
+* 🧩 Extracts data across **multiple tables dynamically**
+* 🔁 Applies **fallback logic instead of fixed structure dependency**
+* 🧠 Handles **missing, shifted, or duplicated fields gracefully**
+
+---
+
+### ⚡ Performance + Reliability
+
+* 🚀 Fully **asynchronous pipeline (aiohttp + asyncio)**
+* 🔄 **Adaptive concurrency control**
+* ⏱️ **Rate limiting + retry with jitter**
+* 📉 Reduced failure rate on unstable endpoints
+
+---
+
+### 📊 Institutional-Level Data Structuring
+
+Data is **not just scraped — it's normalized and analysis-ready**:
+
+* Clean numeric conversion (`to_float`, `to_int`)
+* Null-safe handling
+* Flattened nested structures (shareholding tables)
+* Time-aware metrics (EPS / P/E with date keys)
+* Logically grouped financial data
 
 ---
 
@@ -34,15 +61,108 @@ This project demonstrates **advanced Python engineering practices**, including *
 ```bash
 main.py (Async Orchestrator)
    ↓
-Concurrent Sector Processing (Semaphore-controlled)
+Semaphore-Controlled Concurrency
    ↓
-sectors pipeline → companies pipeline → company info pipeline
+sectors → companies → company_info
    ↓
-export module (Excel Output)
+robust parsing layer (multi-table extraction)
+   ↓
+data normalization + validation
+   ↓
+export (Excel structured dataset)
 ```
 
-### Execution Flow
-![Execution Flow](Execution Flow.jpg)
+---
+
+## 🧩 Core Engineering Concepts
+
+### ✅ 1. Resilient Parsing Layer
+
+* Avoids brittle indexing wherever possible
+* Uses:
+
+  * text-based matching
+  * regex extraction
+  * structural fallbacks
+
+---
+
+### ✅ 2. Data Normalization Layer
+
+* Converts inconsistent raw values into:
+
+  * floats
+  * integers
+  * clean strings
+* Eliminates:
+
+  * `"N/A"`, `"-"`, empty noise
+
+---
+
+### ✅ 3. Hybrid Extraction Strategy
+
+| Method           | Use Case                |
+| ---------------- | ----------------------- |
+| Table Parsing    | Structured fields       |
+| Regex Extraction | Hidden / scattered text |
+| DOM Traversal    | Nested / broken layouts |
+
+---
+
+### ✅ 4. Handling DSE Structural Problems
+
+| Problem                 | Solution              |
+| ----------------------- | --------------------- |
+| Different table layouts | Multi-table scanning  |
+| Missing fields          | Safe fallback logic   |
+| Nested tables           | Flattening strategy   |
+| Duplicate keys          | Indexed normalization |
+| Inconsistent EPS/P.E    | Period-based labeling |
+
+---
+
+## 📊 Data Coverage
+
+### 🟢 Market Data
+
+* LTP, Open, Close, YCP
+* Intraday range
+* 52-week range
+* Price movement %
+
+### 🔵 Liquidity & Volume
+
+* Trade count
+* Volume
+* Value traded
+
+### 🟡 Fundamentals
+
+* Paid-up capital
+* Authorized capital
+* Reserves & OCI
+
+### 🔴 Valuation (Advanced)
+
+* EPS (Quarterly → Annual)
+* EPS (Continuing Operations)
+* P/E:
+
+  * Basic
+  * Diluted
+  * Trailing
+  * Audited vs Unaudited
+
+### 🟣 Corporate Actions
+
+* Dividends (Cash / Bonus / Right)
+* AGM
+* Year End
+
+### ⚫ Ownership
+
+* Shareholding breakdown (flattened + normalized)
 
 ---
 
@@ -52,163 +172,107 @@ export module (Excel Output)
 dse_scraper/
 │
 ├── core/
-│   ├── client.py        # Async HTTP client with rate limiting
-│   ├── holidays.py      # Holiday & weekend detection
-│   ├── parser.py        # HTML parsing & data extraction
-│   ├── logger.py        # Logging configuration
+│   ├── client.py        # Async HTTP client
+│   ├── holidays.py      # Market calendar detection
+│   ├── parser.py        # Robust extraction engine
+│   ├── logger.py        # Logging system
 │
 ├── pipelines/
-│   ├── sectors.py       # Fetch sectors
-│   ├── companies.py     # Fetch companies per sector
-│   ├── company_info.py  # Extract detailed company data
+│   ├── sectors.py
+│   ├── companies.py
+│   ├── company_info.py
 │
 ├── export/
-│   ├── excel.py         # Export data to Excel
+│   ├── excel.py
 │
-├── config.py            # Configuration settings
-├── main.py              # Async entry point
-├── requirements.txt     # Python dependencies
-├── .gitignore           # Git ignore rules
-├── Execution Flow.jpg   # Architecture diagram
+├── config.py
+├── main.py
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## 📊 Data Extracted
-
-The scraper collects comprehensive company data including:
-
-### Basic Information
-* Company Name
-* Trading Code
-* Scrip Code
-* Sector
-* Instrument Type
-
-### Pricing & Trading
-* Last Trading Price (LTP)
-* Opening Price
-* Closing Price
-* Yesterday's Closing Price (YCP)
-* Adjusted Opening Price
-* Day's Range (Low/High)
-* 52 Weeks' Moving Range (Low/High)
-* Change Value & Percentage
-
-### Liquidity & Volume
-* Day's Trade (Number)
-* Day's Volume
-* Day's Value (mn)
-
-### Market Metrics
-* Market Capitalization (mn)
-* Free Float Market Cap (mn)
-* Authorized Capital (mn)
-* Paid-up Capital (mn)
-* Face/Par Value
-* Market Lot
-* Total Outstanding Securities
-
-### Corporate Information
-* Debut Trading Date
-* Last AGM Date
-* Dividend Information (Year, Yield %, Cash, Bonus, Right Issue)
-* Year End
-
-### Shareholding Data
-* Share Holding Percentages (as on specific dates)
-
----
-
 ## ⚙️ Tech Stack
 
-* **Python** (asyncio for asynchronous operations)
-* **aiohttp** (asynchronous HTTP handling)
-* **BeautifulSoup (bs4)** (HTML parsing)
-* **Pandas** (data processing & export)
-* **openpyxl** (Excel engine)
-* **lxml** (XML/HTML parser)
+* Python (asyncio)
+* aiohttp
+* BeautifulSoup (lxml parser)
+* Pandas
+* openpyxl
 
 ---
 
-## 🧪 How to Run
-
-### 1. Clone the repository
+## 🧪 Execution
 
 ```bash
 git clone https://github.com/yourusername/dse-scraper.git
 cd dse-scraper
-```
-
-### 2. Install dependencies
-
-```bash
 pip install -r requirements.txt
-```
-
-### 3. Run the scraper
-
-```bash
 python main.py
 ```
-
-### 4. Automated Execution (GitHub Actions)
-
-The scraper includes a GitHub Actions workflow (`.github/workflows/dse_scraper.yml`) that:
-- Runs automatically every Sunday-Thursday at 8 PM Dhaka time (14:00 UTC)
-- Can be triggered manually via GitHub UI
-- Automatically checks for holidays/weekends and exits gracefully
-- Uploads generated Excel files as workflow artifacts
 
 ---
 
 ## 📦 Output
 
-* Generates: `Export_Data/DSE_Data_{Market_Date}.xlsx` (structured Excel dataset with date-based filename)
-* Generates: `DSECompanyScraper.log` (detailed execution logs)
-* Ready for financial analysis and data processing
+* 📁 `Export_Data/DSE_Data_{Market_Date}.xlsx`
+* 📄 `DSECompanyScraper.log`
+
+✔ Clean
+✔ Structured
+✔ Analysis-ready
 
 ---
 
-## 🔄 Version History
+## 🤖 Automation
 
-### 🔹 v2.1 (Current)
+Includes GitHub Actions:
 
-* **Smart Holiday Detection**: Automatically checks for public holidays and weekends before scraping
-* **Graceful Exit**: Skips execution on non-trading days with informative messages
-* **Official Holiday Data**: Fetches current holiday calendar from DSE website
-* **Weekend Recognition**: Respects Bangladesh weekend (Friday-Saturday)
-* **Multi-day Holiday Support**: Handles holiday ranges (e.g., Eid-ul-Fitr 7-day period)
+* ⏰ Runs Sunday–Thursday (Dhaka trading days)
+* 🚫 Skips holidays automatically
+* 📤 Uploads output as artifacts
 
-### 🔹 v2.0
+---
 
-* **Asynchronous Architecture**: Implemented async scraping with aiohttp for high performance
-* **Advanced Rate Limiting**: Adaptive rate limiter with jitter and concurrency control
-* **Comprehensive Logging**: Production-ready logging system with file and console output
-* **Extended Data Fields**: Expanded to 40+ financial and corporate metrics
-* **Refactored into pipeline-based modular architecture**
-* **Improved maintainability and scalability**
-* **Separated parsing, networking, and processing logic**
+## 🔄 Version Evolution
+
+### 🔥 v3.0 — Resilient Parsing Upgrade (Current)
+
+* Major redesign of parsing layer
+* Handles **non-uniform DSE HTML structures**
+* Multi-source extraction strategy
+* Improved EPS & P/E extraction reliability
+* Enhanced data cleaning & normalization
+
+---
+
+### ⚡ v2.0 — Async System Upgrade
+
+* Async pipeline architecture
+* Rate limiting + retries
+* Logging system
+* Modular design
 
 ---
 
 ## 🎯 Use Cases
 
-* 📈 Stock market data collection
-* 📊 Financial analysis datasets
-* 🤖 Automation & scraping projects
-* 💼 Freelancing portfolio showcase
+* 📊 Financial modeling
+* 📈 Equity research
+* 🧠 Quant analysis
+* 💼 Portfolio showcase
+* 🤖 Automated data pipelines
 
 ---
 
-## 🚧 Future Improvements
+## 🚧 Future Roadmap
 
-* Proxy rotation support for enhanced anonymity
-* CLI arguments for customization
-* API-based data serving
-* Database integration for data persistence
-* Web dashboard for monitoring
+* Database integration (PostgreSQL / MongoDB)
+* REST API layer
+* Stock ranking engine
+* Valuation models (DCF / Relative)
+* Dashboard (Streamlit / React)
 
 ---
 
@@ -219,32 +283,6 @@ The scraper includes a GitHub Actions workflow (`.github/workflows/dse_scraper.y
 
 ---
 
-## ⭐ Why This Project Matters
-
-This project demonstrates the transition from:
-
-> ❌ Basic scripting → ✅ Scalable software design
-
-It reflects **real-world engineering practices**, including:
-
-* Refactoring
-* Modular architecture
-* Pipeline design
-
----
-
 ## 📜 License
 
-This project is licensed under the MIT License.
-
----
-
-## 🌟 Support
-
-If you found this useful:
-
-* ⭐ Star the repository
-* 🍴 Fork it
-* 🛠️ Contribute
-
----
+MIT License
