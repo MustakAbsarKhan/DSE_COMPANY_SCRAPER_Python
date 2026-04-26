@@ -279,10 +279,15 @@ Includes GitHub Actions:
 ## 👨‍💻 Author
 
 **Mohammad Mustak Absar Khan**
+
+***Original creator and maintainer of this project***
+
 📧 [mustak.absar.khan@gmail.com](mailto:mustak.absar.khan@gmail.com)
 
 ---
 
-## 📜 License
+## 📄 License
 
-MIT License
+This project is licensed under the MIT License.
+
+All derivatives must retain original attribution to the author.

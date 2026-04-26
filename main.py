@@ -1,3 +1,9 @@
+"""
+DSE Company Data Scraper
+Author: Mohammad Mustak Absar Khan
+GitHub: https://github.com/MustakAbsarKhan
+"""
+
 import asyncio
 
 from config import DOMAIN, MAIN_URL, IGNORED_SECTORS
