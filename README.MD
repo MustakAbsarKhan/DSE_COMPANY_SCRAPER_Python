@@ -1,46 +1,117 @@
 # DSE Company Data Scraper
 
-Asynchronous Dhaka Stock Exchange (DSE) company data scraper that collects sector-wise listed company data, normalizes the fields, and exports an analysis-ready Excel workbook.
+> Production-minded async data pipeline for collecting, normalizing, and exporting Dhaka Stock Exchange company fundamentals from inconsistent public web pages.
 
-The scraper is built for DSE pages that are often inconsistent, nested, and table-heavy. It combines table parsing, targeted DOM traversal, regex extraction, defensive null handling, and ordered Excel export.
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Async](https://img.shields.io/badge/Async-aiohttp-2F80ED)](https://docs.aiohttp.org/)
+[![Data Export](https://img.shields.io/badge/Export-Excel-217346?logo=microsoftexcel&logoColor=white)](#excel-output)
+[![Automation](https://img.shields.io/badge/Automation-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](#automation)
+[![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red)](#license-and-usage)
 
-## Current Features
+## Why This Project Exists
 
-- Async scraping with `aiohttp` and `asyncio`
-- Adaptive request throttling with retry, delay, and concurrency control
-- Sector discovery from the DSE industry listing page
-- Company URL discovery per sector
-- Company profile extraction with normalized market, financial, corporate, and ownership data
-- Optional holiday checker for DSE market holidays and Friday/Saturday weekends
-- Excel export with finance-analysis-friendly column order
-- GitHub Actions workflow for scheduled and manual scraper runs
+The Dhaka Stock Exchange website exposes valuable company data, but the pages are not shaped like a clean API. Tables are nested, labels vary, values can move between sections, and missing fields are common. This project turns that messy public HTML into a structured Excel dataset that can be used for screening, research, and decision support.
 
-## Data Coverage
+This is not a toy scraper. It is built as a small data engineering system with async IO, adaptive throttling, retries, modular parsing, normalized financial fields, ordered exports, and scheduled GitHub Actions execution.
 
-The exported workbook includes these major groups:
+![Execution flow](Execution%20Flow.jpg)
 
-- Identification: company name, trading code, scrip code, sector, instrument type, listing metadata
-- Market price: LTP, YCP, open, adjusted open, close, day range, 52-week range, change value and percent
-- Liquidity: trade count, volume, traded value
-- Capitalization and structure: market cap, free float cap, authorized capital, paid-up capital, securities, face value, market lot
-- EPS metrics: quarterly, nine-month, half-yearly, annual EPS, EPS continuing operations, and diluted EPS continuing operations
-- Audited annual financial performance:
-  - `Aud_EPS_COP_Basic_{Year}`
-  - `Aud_EPS_COP_Diluted_{Year}`
-  - `Aud_NAVPS_{Year}`
-  - `Aud_PCO_mn_{Year}`
-  - `Aud_Profit_mn_{Year}`
-  - `Aud_TCI_mn_{Year}`
-- P/E ratios: basic EPS, diluted EPS, trailing ratio, audited basic EPS
-- Corporate actions: AGM, year ended, dividend year/yield, cash dividend, bonus issue, right issue, year end
-- Shareholding: flattened shareholding percentage rows
-- Additional useful scraped DSE fields that are not already normalized
+## Table Of Contents
 
-Noise fields such as `Closing Price Graph:`, `Total Trade Graph:`, and `Total Volume Graph:` are intentionally excluded from the export.
+- [Highlights](#highlights)
+- [What It Collects](#what-it-collects)
+- [Architecture](#architecture)
+- [Data Quality Strategy](#data-quality-strategy)
+- [Excel Output](#excel-output)
+- [Automation](#automation)
+- [Run Locally](#run-locally)
+- [Security And IP Protection](#security-and-ip-protection)
+- [Portfolio Value](#portfolio-value)
+- [Project Structure](#project-structure)
+- [Roadmap](#roadmap)
+- [License And Usage](#license-and-usage)
 
-## Excel Output Order
+## Highlights
 
-The Excel writer uses explicit column groups in `export/excel.py`:
+| Area | Implementation |
+| --- | --- |
+| Async pipeline | `asyncio` orchestration with `aiohttp` network calls |
+| Adaptive throttling | Dynamic request delay and concurrency reduction after failures |
+| Retry strategy | Request retries with jitter to reduce transient failures |
+| Sector discovery | Automatically discovers tradable sector links from DSE |
+| Company discovery | Collects company detail URLs per sector |
+| Robust parsing | Combines table extraction, DOM traversal, regex, and fallback logic |
+| Normalization | Converts raw strings into clean numeric and text fields |
+| Financial coverage | Market data, capital structure, EPS, P/E, annual audited metrics, dividends, shareholding |
+| Analysis-ready export | Explicit Excel column order designed for finance workflows |
+| Automation | Scheduled and manual GitHub Actions workflows |
+
+## What It Collects
+
+The final workbook is designed around practical equity research workflows.
+
+| Group | Example Fields |
+| --- | --- |
+| Identity | Company name, trading code, scrip code, sector, instrument type |
+| Listing metadata | Listing year, market category, electronic share, debut trading date |
+| Market price | LTP, YCP, open, adjusted open, close, day range, 52-week range |
+| Movement | Change value and change percentage |
+| Liquidity | Trade count, volume, traded value |
+| Capital structure | Market cap, free float cap, authorized capital, paid-up capital, securities, face value |
+| EPS | Quarterly, half-yearly, nine-month, annual, continuing operations, diluted continuing operations |
+| Annual audited performance | EPS, diluted EPS, NAVPS, operating cash flow, profit, total comprehensive income |
+| Valuation | Basic EPS P/E, diluted EPS P/E, trailing P/E, audited basic EPS P/E |
+| Corporate actions | AGM, year ended, dividend year, dividend yield, cash dividend, bonus issue, right issue |
+| Ownership | Flattened shareholding percentage rows |
+
+Noise fields such as graph labels are intentionally excluded from the export, while useful unmodeled DSE fields are still preserved at the end of the workbook.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[main.py] --> B[Fetch sector links]
+    B --> C[Filter ignored sectors]
+    C --> D[Fetch company URLs per sector]
+    D --> E[Fetch company pages concurrently]
+    E --> F[Parse inconsistent HTML]
+    F --> G[Normalize fields]
+    G --> H[Order analysis columns]
+    H --> I[Export Excel workbook]
+```
+
+The scraper keeps the pipeline split into small modules so each concern is easy to inspect, test, and extend.
+
+```text
+main.py
+  -> pipelines/sectors.py
+  -> pipelines/companies.py
+  -> pipelines/company_info.py
+  -> core/client.py
+  -> core/parser.py
+  -> export/excel.py
+```
+
+## Data Quality Strategy
+
+DSE pages are inconsistent, so the parser does not rely on a single brittle selector. It uses layered extraction:
+
+- Table scanning for structured key/value fields
+- Targeted DOM traversal for nested sections
+- Regex extraction for values embedded in page text
+- Defensive null handling for missing or shifted fields
+- Duplicate prevention when a field is already normalized under a clearer name
+- Stable output ordering so every workbook is easy to compare over time
+
+## Excel Output
+
+Generated files follow this pattern:
+
+```bash
+Export_Data/DSE_Data_{Market_Date}.xlsx
+```
+
+Column groups are ordered for financial analysis:
 
 1. Identity and listing metadata
 2. Price and movement
@@ -53,125 +124,42 @@ The Excel writer uses explicit column groups in `export/excel.py`:
 9. Shareholding
 10. Remaining preserved scraped fields
 
-This keeps the workbook suitable for stock screening, financial analysis, and decision support while still preserving useful scraped data.
+## Automation
 
-Output files are written to:
+The GitHub Actions workflows support both scheduled and manual runs.
 
-```bash
-Export_Data/DSE_Data_{Market_Date}.xlsx
+```yaml
+cron: "20 14 * * 0-4"
 ```
 
-Logs are written to:
-
-```bash
-DSECompanyScraper.log
-```
-
-## Project Structure
-
-```bash
-DSE_COMPANY_SCRAPER_Python/
-|
-├── core/
-│   ├── client.py        # Async HTTP client with adaptive throttle
-│   ├── holidays.py      # DSE holiday/weekend checker
-│   ├── logger.py        # Shared logger setup
-│   └── parser.py        # HTML parsing and field normalization
-|
-├── pipelines/
-│   ├── sectors.py       # fetch_tradable_sector_links()
-│   ├── companies.py     # fetch_company_urls_for_sector()
-│   └── company_info.py  # fetch_company_profiles()
-|
-├── export/
-│   └── excel.py         # export_company_rows_to_excel()
-|
-├── .github/workflows/
-│   └── dse_scraper.yml  # Scheduled/manual GitHub Actions run
-|
-├── config.py
-├── main.py
-├── requirements.txt
-└── README.MD
-```
-
-## Main Code Flow
-
-```bash
-main.py
-  -> fetch_tradable_sector_links()
-  -> fetch_company_urls_for_sector()
-  -> fetch_company_profiles()
-  -> extract_company_profile()
-  -> export_company_rows_to_excel()
-```
-
-`main.py` processes sectors concurrently with a semaphore. Company pages are fetched through the shared `global_client`, so adaptive throttling learns across the full run.
-
-## Key Parser Functions
-
-`core/parser.py` contains the extraction layer:
-
-- `parse_html()` converts raw HTML into BeautifulSoup
-- `parse_float()`, `parse_int()`, and `clean_text()` normalize raw values
-- `extract_company_table_key_values()` reads general DSE table key/value fields
-- `extract_security_codes()` extracts trading and scrip codes
-- `extract_price_change()` parses the nested change table
-- `extract_basic_information()` parses the Basic Information section
-- `extract_corporate_action_fields()` extracts dividend, AGM, year-end, reserve, and OCI fields
-- `extract_listing_metadata()` extracts listing year, market category, and electronic share
-- `extract_shareholding_percentages()` flattens shareholding rows
-- `extract_eps_metrics()` extracts EPS and continuing-operations EPS
-- `extract_pe_ratios_and_annual_performance()` extracts P/E ratios and audited annual performance metrics
-- `extract_company_profile()` builds one final export row
-
-The parser also preserves useful unmodeled DSE fields, while avoiding duplicates for fields that are already normalized under clearer names.
-
-## Temporary Single-Company Debugging
-
-`pipelines/company_info.py` includes a commented debug block:
-
-```python
-# company_urls = [
-#     url for url in company_urls
-#     if "ABBANK" in url.upper()
-# ]
-#
-# print("Filtered URLs:", company_urls)  # DEBUG
-```
-
-Uncomment and change the trading-code text when you want to test the parser against one company only. Keep it commented for full production runs.
-
-## Installation
-
-```bash
-git clone https://github.com/MustakAbsarKhan/DSE_COMPANY_SCRAPER_Python.git
-cd DSE_COMPANY_SCRAPER_Python
-pip install -r requirements.txt
-```
+This schedule runs Sunday through Thursday at 14:20 UTC, matching Bangladesh market days after the close. Generated Excel files are uploaded as workflow artifacts.
 
 ## Run Locally
 
 ```bash
+git clone https://github.com/MustakAbsarKhan/DSE_COMPANY_SCRAPER_Python.git
+cd DSE_COMPANY_SCRAPER_Python
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
 python main.py
 ```
 
-The scraper will:
+On Linux or macOS, activate the environment with:
 
-1. Fetch DSE sectors
-2. Skip ignored non-equity sectors from `config.py`
-3. Fetch company links for each sector
-4. Scrape company pages
-5. Normalize and combine all rows
-6. Export the Excel workbook
+```bash
+source .venv/bin/activate
+```
 
 ## Configuration
 
-`config.py` defines:
+`config.py` contains the main project configuration:
 
-- `DOMAIN`: DSE base URL
-- `MAIN_URL`: DSE industry listing page
-- `IGNORED_SECTORS`: sectors skipped because they do not follow normal listed-equity data structure
+| Name | Purpose |
+| --- | --- |
+| `DOMAIN` | DSE base URL |
+| `MAIN_URL` | DSE industry listing page |
+| `IGNORED_SECTORS` | Non-equity-like sectors skipped by the scraper |
 
 Current ignored sectors:
 
@@ -179,52 +167,84 @@ Current ignored sectors:
 - Debenture
 - G-SEC (T.Bond)
 
-## GitHub Actions
+## Security And IP Protection
 
-The workflow at `.github/workflows/dse_scraper.yml`:
+This repository is designed to showcase engineering skill without exposing secrets or unnecessary runtime artifacts.
 
-- Runs on Ubuntu
-- Uses Python 3.11
-- Installs dependencies
-- Runs `python main.py`
-- Uploads generated Excel files from `Export_Data/*.xlsx`
+- No API keys, tokens, passwords, or private credentials are required.
+- Runtime logs and generated Excel exports are ignored by Git.
+- `.env` and virtual environment folders are ignored.
+- Network access is limited to public DSE pages.
+- Generated artifacts should be shared intentionally through GitHub Actions, not committed as source.
+- See [SECURITY.md](SECURITY.md) for reporting guidance.
 
-Schedule:
+Important: public repositories can always be viewed and copied technically. Protection comes from license terms, attribution, commit history, public proof of authorship, and limiting what sensitive or proprietary material is published.
 
-```yaml
-cron: "20 14 * * 0-4"
+## Portfolio Value
+
+This project demonstrates practical skills that matter in freelance and professional data roles:
+
+- Async Python system design
+- Resilient scraping under unstable HTML structures
+- Financial data normalization
+- Defensive parsing and graceful degradation
+- Excel reporting for business users
+- GitHub Actions automation
+- Modular code organization
+- Clear documentation for maintainability
+
+## Project Structure
+
+```text
+DSE_COMPANY_SCRAPER_Python/
+|
+├── .github/workflows/
+│   ├── dse_scraper.yml      # Scheduled/manual production-style run
+│   └── manual.yml           # Manual execution workflow
+|
+├── core/
+│   ├── client.py            # Async HTTP client with adaptive throttle
+│   ├── holidays.py          # DSE holiday/weekend checker
+│   ├── logger.py            # Shared logger setup
+│   └── parser.py            # HTML parsing and normalization
+|
+├── export/
+│   └── excel.py             # Analysis-ready Excel export
+|
+├── pipelines/
+│   ├── sectors.py           # Sector discovery
+│   ├── companies.py         # Company URL discovery
+│   └── company_info.py      # Company profile scraping
+|
+├── config.py
+├── main.py
+├── requirements.txt
+├── SECURITY.md
+└── README.MD
 ```
 
-This is Sunday through Thursday at 14:20 UTC.
+## Roadmap
 
-Manual runs are also supported through `workflow_dispatch`.
-
-## Tech Stack
-
-- Python
-- asyncio
-- aiohttp
-- BeautifulSoup
-- lxml
-- pandas
-- openpyxl
-
-## Notes
-
-- DSE HTML structure can change. Some financial tables are still index-based because the source layout is complex.
-- The parser is defensive: missing fields should produce blank cells instead of stopping the entire scraper.
-- Generated Excel files and logs are runtime output and may change on every scraper run.
+- Add unit tests for parser helpers and Excel column ordering
+- Add optional CSV and Parquet exports
+- Add historical snapshot storage
+- Add schema validation for exported rows
+- Add a dashboard layer for screening and comparisons
+- Add CI checks for formatting and tests
 
 ## Author
 
-Mohammad Mustak Absar Khan
+**Mohammad Mustak Absar Khan**
 
-Original creator and maintainer of this project.
+Original creator and maintainer.
 
-Email: [mustak.absar.khan@gmail.com](mailto:mustak.absar.khan@gmail.com)
+- GitHub: [MustakAbsarKhan](https://github.com/MustakAbsarKhan)
+- Email: [mustak.absar.khan@gmail.com](mailto:mustak.absar.khan@gmail.com)
 
-## License
+## License And Usage
 
-This project is licensed under the MIT License.
+Copyright (c) Mohammad Mustak Absar Khan.
 
-All derivatives must retain original attribution to the author.
+This project is published for portfolio review, educational inspection, and hiring evaluation. Commercial use, resale, redistribution, or claiming this work as your own is not permitted without written permission from the author.
+
+See [LICENSE.md](LICENSE.md) for the full terms.

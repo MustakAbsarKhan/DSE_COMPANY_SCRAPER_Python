@@ -1,8 +1,19 @@
 # Ignore Python cache directories
 __pycache__/
+*.py[cod]
 
 # Ignore virtual environments
 venv/
 .venv/
 env/
 .env/
+
+# Ignore runtime outputs
+DSECompanyScraper.log
+*.log
+
+# Ignore local editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
