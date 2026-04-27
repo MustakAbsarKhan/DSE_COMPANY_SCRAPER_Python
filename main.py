@@ -10,12 +10,12 @@ import asyncio
 from config import DOMAIN, MAIN_URL, IGNORED_SECTORS
 
 # Pipeline functions keep each scraping stage small and readable.
-from pipelines.sectors import get_sectors
-from pipelines.companies import get_companies
-from pipelines.company_info import get_company_infos
+from pipelines.sectors import fetch_tradable_sector_links
+from pipelines.companies import fetch_company_urls_for_sector
+from pipelines.company_info import fetch_company_profiles
 
 # Final output writer.
-from export.excel import save_to_excel
+from export.excel import export_company_rows_to_excel
 
 # Optional market holiday checker. It is currently disabled in main(), but kept
 # here so the scraper can skip closed market days when needed.
@@ -30,15 +30,15 @@ async def process_sector(sector):
     print(f"\n🔹 Processing Sector: {sector['name']}")
 
     # Step 1: open the sector page and collect all company detail-page links.
-    companies = await get_companies(DOMAIN, sector["url"])
-    company_count = len(companies)
+    company_urls = await fetch_company_urls_for_sector(DOMAIN, sector["url"])
+    company_count = len(company_urls)
 
     # print(f"   ➤ Companies Found: {company_count}")
 
     # Step 2: fetch and parse every company page found inside this sector.
-    sector_data = await get_company_infos(
+    sector_data = await fetch_company_profiles(
         DOMAIN,
-        companies,
+        company_urls,
         sector["name"]
     )
 
@@ -80,7 +80,7 @@ async def main():
     # STEP 1: GET SECTORS
     # =========================
     # Fetch the DSE industry listing page and remove ignored sectors.
-    sectors = await get_sectors(MAIN_URL, IGNORED_SECTORS)
+    sectors = await fetch_tradable_sector_links(MAIN_URL, IGNORED_SECTORS)
 
     total_sectors_found = len(sectors)
 
@@ -122,7 +122,7 @@ async def main():
     # SAVE DATA
     # =========================
     # Convert the list of dictionaries into an Excel file.
-    save_to_excel(all_data)
+    export_company_rows_to_excel(all_data)
 
     # =========================
     # FINAL SUMMARY

@@ -94,28 +94,28 @@ class AsyncClient:
                     # Respect the current global adaptive delay before each try.
                     await self.throttle.wait_delay()
 
-                    async with session.get(url, timeout=10) as res:
-                        res.raise_for_status()
-                        text = await res.text()
+                    async with session.get(url, timeout=10) as response:
+                        response.raise_for_status()
+                        text = await response.text()
 
                         self.throttle.success()
                         logger.info(f"SUCCESS: {url}")
 
                         return text
 
-                except Exception as e:
+                except Exception as error:
                     # Any HTTP/network/timeout error counts as pressure from
                     # the site or connection, so slow down globally.
                     self.throttle.failure()
 
                     if attempt < self.retries:
                         logger.warning(
-                            f"RETRY {attempt}/{self.retries}: {url} | {type(e).__name__}: {e}"
+                            f"RETRY {attempt}/{self.retries}: {url} | {type(error).__name__}: {error}"
                         )
                         await asyncio.sleep(attempt + random.uniform(0, 1))
                     else:
                         logger.error(
-                            f"FAILED: {url} | {type(e).__name__}: {e}"
+                            f"FAILED: {url} | {type(error).__name__}: {error}"
                         )
 
             return None

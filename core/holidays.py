@@ -32,8 +32,8 @@ class HolidayChecker:
             self.holidays = self._parse_holidays(soup)
             return True
 
-        except Exception as e:
-            print(f"❌ Failed to fetch holidays: {e}")
+        except Exception as error:
+            print(f"❌ Failed to fetch holidays: {error}")
             return False
 
     def _parse_holidays(self, soup):
