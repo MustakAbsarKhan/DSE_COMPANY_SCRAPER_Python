@@ -1,5 +1,10 @@
+# Async HTTP requests for fetching many DSE pages concurrently.
 aiohttp>=3.8.0
+
+# HTML parsing helpers used by the parser layer.
 beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# DataFrame creation and Excel export.
 pandas>=2.0.0
 openpyxl>=3.1.0
-lxml>=4.9.0

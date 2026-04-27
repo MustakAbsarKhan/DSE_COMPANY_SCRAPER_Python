@@ -5,15 +5,21 @@ import asyncio
 
 
 class HolidayChecker:
+    """Fetch DSE holidays and decide whether scraping should run today."""
+
     def __init__(self):
+        # Parsed holiday dates are stored here after fetch_holidays() runs.
         self.holidays = []
+
+        # DSE holiday/trading schedule page.
         self.url = "https://www.dsebd.org/hts.php"
 
     async def fetch_holidays(self):
-        """Fetch and parse holiday dates from DSE website"""
-        # Sleep for 2 seconds before fetching
+        """Fetch the DSE holiday page and parse all listed holiday dates."""
+        # Short delay keeps this auxiliary request from firing immediately at
+        # program start with the rest of the scraper.
         await asyncio.sleep(2)
-        
+
         try:
             async with aiohttp.ClientSession(
                 headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -31,27 +37,32 @@ class HolidayChecker:
             return False
 
     def _parse_holidays(self, soup):
-        """Parse holiday table from HTML"""
+        """Parse holiday rows from the DSE holiday table."""
         holidays = []
 
-        # Find the holiday table
+        # The page contains one main table. If DSE changes the layout and no
+        # table is found, return an empty list instead of crashing.
         table = soup.find("table")
         if not table:
             return holidays
 
-        # Skip header row
+        # Skip header row. Each remaining row contains a holiday date or range.
         rows = table.find_all("tr")[1:]
 
         for row in rows:
             cols = row.find_all("td")
             if len(cols) >= 2:
+                # Column 2 contains strings like "04 February" or
+                # "11-12 February".
                 date_str = cols[1].get_text(strip=True)
                 holidays.extend(self._parse_date_range(date_str))
+
+        # Debug output showing the parsed holiday dates.
         print(holidays)#test
         return holidays
 
     def _parse_date_range(self, date_str):
-        """Parse date string like '04 February' or '11-12 February'"""
+        """Convert one holiday date/range string into date objects."""
         dates = []
         current_year = datetime.now().year
 
@@ -82,7 +93,7 @@ class HolidayChecker:
         return dates
 
     def _parse_single_date(self, date_str, year):
-        """Parse single date string like '04 February'"""
+        """Parse a single day/month string into a Python date."""
         try:
             # Remove extra spaces and split
             parts = date_str.split()
@@ -104,7 +115,7 @@ class HolidayChecker:
         return None
 
     def is_holiday(self, check_date=None):
-        """Check if given date is a holiday or weekend"""
+        """Check whether a date is a weekend or listed DSE holiday."""
         if check_date is None:
             check_date = date.today()
 
@@ -122,7 +133,7 @@ class HolidayChecker:
         return False, None
 
     async def check_and_exit_if_holiday(self):
-        """Check if today is holiday/weekend and exit gracefully if so"""
+        """Return True when the scraper should stop because the market is closed."""
         success = await self.fetch_holidays()
         if not success:
             print("⚠️  Warning: Could not fetch holiday data. Proceeding with scraping...")

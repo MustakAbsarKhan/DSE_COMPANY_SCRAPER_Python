@@ -2,10 +2,16 @@ import re
 from bs4 import BeautifulSoup as bs
 
 
+# This file contains the HTML extraction layer. DSE company pages are not very
+# consistent, so most functions are defensive: they return None or an empty
+# dictionary/list instead of stopping the full scraper when one field is missing.
+
+
 # =============================
 # BASIC PARSER
 # =============================
 def parse_html(html):
+    """Convert raw HTML text into a BeautifulSoup object using lxml."""
     return bs(html, "lxml")
 
 
@@ -13,6 +19,7 @@ def parse_html(html):
 # SAFE HELPERS
 # =============================
 def to_float(x):
+    """Convert a DSE numeric string into float, returning None for blanks."""
     try:
         if not x:
             return None
@@ -25,6 +32,7 @@ def to_float(x):
 
 
 def to_int(x):
+    """Convert a DSE numeric string into int, returning None for blanks."""
     try:
         if not x:
             return None
@@ -37,6 +45,7 @@ def to_int(x):
 
 
 def clean_str(x):
+    """Normalize text fields and turn empty placeholders into None."""
     if not x:
         return None
     x = x.strip()
@@ -47,8 +56,10 @@ def clean_str(x):
 # ✅ SECTOR EXTRACTION (FIXED)
 # =============================
 def extract_sectors(soup, ignored):
+    """Extract sector names and relative URLs from the industry listing page."""
     sectors = []
 
+    # On the industry page, sector links live inside left-aligned table cells.
     for td in soup.find_all("td", class_="text-left"):
         a = td.find("a", class_="ab1")
 
@@ -68,6 +79,7 @@ def extract_sectors(soup, ignored):
 # COMPANY LINKS
 # =============================
 def extract_companies(soup):
+    """Extract company detail-page links from a sector page."""
     links = soup.find_all("a", class_="ab1")
     company_links = []
 
@@ -83,11 +95,14 @@ def extract_companies(soup):
 # TABLE PARSER
 # =============================
 def extract_table_data(soup):
+    """Read key/value pairs from all DSE tables with id='company'."""
     data = {}
     tables = soup.find_all("table", id="company")
 
     for table in tables:
         for row in table.find_all("tr"):
+            # recursive=False means only direct cells are used. This avoids
+            # mixing nested table values into the wrong parent row.
             ths = row.find_all("th", recursive=False)
             tds = row.find_all("td", recursive=False)
 
@@ -105,6 +120,7 @@ def extract_table_data(soup):
 # MARKET DATE
 # =============================
 def extract_market_date(soup):
+    """Extract the market date shown under the Market Information heading."""
     for h2 in soup.find_all("h2"):
         if "Market Information" in h2.get_text():
             i = h2.find("i")
@@ -117,6 +133,7 @@ def extract_market_date(soup):
 # CODES
 # =============================
 def extract_codes(soup):
+    """Extract Trading Code and Scrip Code from page text using regex."""
     trading_code = None
     scrip_code = None
 
@@ -142,10 +159,13 @@ def extract_codes(soup):
 # CHANGE
 # =============================
 def extract_change(soup):
+    """Extract price change value and percentage from the nested change table."""
     change_value = None
     change_percent = None
 
     try:
+        # The Change field is stored in a nested table, so regular key/value
+        # table parsing does not capture it cleanly.
         th = soup.find("th", string=lambda x: x and "Change" in x)
 
         if th:
@@ -168,6 +188,7 @@ def extract_change(soup):
 # BASIC INFO
 # =============================
 def extract_basic_info(soup):
+    """Extract the Basic Information table into a dictionary."""
     data = {}
 
     try:
@@ -191,9 +212,11 @@ def extract_basic_info(soup):
 # EXTRA FIELDS - AGM AND OCI DETAILS
 # =============================
 def extract_extra_fields(soup):
+    """Extract dividend, AGM, year-end, reserve, and OCI fields."""
     data = {}
     text = soup.get_text("\n", strip=True)
 
+    # Some fields appear as plain page text instead of regular table cells.
     agm = re.search(r"Last AGM held on:\s*([0-9\-]+)", text)
     if agm:
         data["Last AGM held on"] = agm.group(1)
@@ -211,12 +234,15 @@ def extract_extra_fields(soup):
         "Other Comprehensive Income (OCI) (mn)",
     ]
 
+    # The last 'shrink' block contains latest dividend year/yield information
+    # on the current DSE layout.
     shrink = (soup.find_all(class_='shrink'))[-1]
     div_info = shrink.findAll('td')
     data["Last Div Year"] = int(div_info[0].text.strip())
     data["Last Div Yield %"] = to_float(div_info[-1].text.strip())
     
 
+    # Scan all company tables for named corporate/fundamental fields.
     for table in soup.find_all("table", id="company"):
         for row in table.find_all("tr"):
             th = row.find("th")
@@ -234,6 +260,7 @@ def extract_extra_fields(soup):
 # OTHER INFORMATION OF THE COMPANY
 # ================================
 def other_company_info(soup):
+    """Extract listing/category/share metadata from company information tables."""
     other_company_data = {}
     data_fields = [
         "Listing Year",
@@ -257,6 +284,7 @@ def other_company_info(soup):
 # Shareholding INFO OF THE COMPANY
 # ================================
 def parse_shareholding_rows(soup):
+    """Flatten shareholding-percentage rows into export-friendly strings."""
     rows_data = {}
 
     # Only target rows that contain "Share Holding Percentage"
@@ -290,7 +318,15 @@ def parse_shareholding_rows(soup):
 
 # Extract Audited EPS and Unaudited EPS for Continuing Operations
 def extract_epss(soup):
+    """Extract EPS values from the DSE EPS table.
+
+    Important: this uses DSE's current table order. The parser intentionally
+    keeps this index-based extraction because the page layout is complex and was
+    tuned against the live DSE structure.
+    """
     data = {}
+
+    # Table index 4 currently contains EPS sections on DSE company pages.
     table = soup.find_all("table", id="company")[4]
 
     periods = ["Q1", "Q2", "HalfYearly", "Q3", "9Months", "Annual"]
@@ -329,6 +365,7 @@ def extracted_pe(soup):
     # -----------------------------
     # UNAUDITED TABLE (index 5)
     # -----------------------------
+    # Table index 5 currently contains unaudited P/E values.
     table_unaudited = soup.find_all("table", id="company")[5]
     tds_unaudited = table_unaudited.find_all("td")
 
@@ -359,6 +396,7 @@ def extracted_pe(soup):
     # -----------------------------
     # AUDITED TABLE (index 6)
     # -----------------------------
+    # Table index 6 currently contains audited P/E values.
     table_audited = soup.find_all("table", id="company")[6]
     tds_audited = table_audited.find_all("td")
 
@@ -384,17 +422,23 @@ def extracted_pe(soup):
 # MAIN FUNCTION
 # =============================
 def extract_company_info(soup, sector):
+    """Build one clean export row from a single DSE company page."""
+    # Generic table extraction catches most key/value market fields.
     table = extract_table_data(soup)
+
+    # Basic info is parsed separately because it lives under a named heading.
     basic_info = extract_basic_info(soup)
 
     name = None
     try:
+        # The second <i> tag currently contains the company name on DSE pages.
         name = soup.find_all("i")[1].text.strip()
     except:
         pass
 
     market_date = extract_market_date(soup)
 
+    # Split range strings like "10.00 - 20.00" into separate low/high columns.
     low, high = None, None
     if "52 Weeks' Moving Range" in table:
         try:
@@ -411,13 +455,17 @@ def extract_company_info(soup, sector):
 
     change_value, change_percent = extract_change(soup)
     trading_code, scrip_code = extract_codes(soup)
+
+    # Specialized extractors handle fields that are nested, repeated, or stored
+    # outside ordinary key/value table rows.
     extra = extract_extra_fields(soup)
     other_company_data = other_company_info(soup)
     extracted_eps = extract_epss(soup)
     extracted_pe_data = extracted_pe(soup)
     shareholding_data = parse_shareholding_rows(soup)
     
-    
+    # Start with a predictable base schema. Some fields are initialized as None
+    # and filled later by more specialized extraction results.
     result = {
     # =============================
     # 🟢 IDENTIFICATION
@@ -519,10 +567,16 @@ def extract_company_info(soup, sector):
     "Electronic Share": None,
     }
     
-    # Merge extra
+    # Merge specialized data into the base schema. Later values override earlier
+    # placeholder None values where available.
     result.update(extra)
     result.update(other_company_data)
+
+    # Listing Year is scraped as text, so convert it after merging.
     result["Listing Year"] = to_int(result.get("Listing Year"))
+
+    # EPS/P/E are already included in the base result, but these updates keep
+    # the final row aligned with the latest extracted dictionaries.
     result.update(extracted_eps)
     result.update(extracted_pe_data)
     result.update(shareholding_data)
@@ -539,6 +593,8 @@ def extract_company_info(soup, sector):
     # =============================
     # PURPOSE BASED FINAL ORDER CONTROL
     # =============================
+    # Python dictionaries preserve insertion order. Rebuilding through
+    # ordered_keys keeps the export column order explicit and stable.
     ordered_keys = list(result.keys())  # already structured logically
 
     ordered_result = {k: result.get(k) for k in ordered_keys}
