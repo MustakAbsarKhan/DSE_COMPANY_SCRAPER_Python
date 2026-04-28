@@ -33,36 +33,36 @@ This is not a toy scraper. It is built as a small data engineering system with a
 
 ## Highlights
 
-| Area | Implementation |
-| --- | --- |
-| Async pipeline | `asyncio` orchestration with `aiohttp` network calls |
-| Adaptive throttling | Dynamic request delay and concurrency reduction after failures |
-| Retry strategy | Request retries with jitter to reduce transient failures |
-| Sector discovery | Automatically discovers tradable sector links from DSE |
-| Company discovery | Collects company detail URLs per sector |
-| Robust parsing | Combines table extraction, DOM traversal, regex, and fallback logic |
-| Normalization | Converts raw strings into clean numeric and text fields |
-| Financial coverage | Market data, capital structure, EPS, P/E, annual audited metrics, dividends, shareholding |
-| Analysis-ready export | Explicit Excel column order designed for finance workflows |
-| Automation | Scheduled and manual GitHub Actions workflows |
+| Area                  | Implementation                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| Async pipeline        | `asyncio` orchestration with `aiohttp` network calls                                      |
+| Adaptive throttling   | Dynamic request delay and concurrency reduction after failures                            |
+| Retry strategy        | Request retries with jitter to reduce transient failures                                  |
+| Sector discovery      | Automatically discovers tradable sector links from DSE                                    |
+| Company discovery     | Collects company detail URLs per sector                                                   |
+| Robust parsing        | Combines table extraction, DOM traversal, regex, and fallback logic                       |
+| Normalization         | Converts raw strings into clean numeric and text fields                                   |
+| Financial coverage    | Market data, capital structure, EPS, P/E, annual audited metrics, dividends, shareholding |
+| Analysis-ready export | Explicit Excel column order designed for finance workflows                                |
+| Automation            | Scheduled and manual GitHub Actions workflows                                             |
 
 ## What It Collects
 
 The final workbook is designed around practical equity research workflows.
 
-| Group | Example Fields |
-| --- | --- |
-| Identity | Company name, trading code, scrip code, sector, instrument type |
-| Listing metadata | Listing year, market category, electronic share, debut trading date |
-| Market price | LTP, YCP, open, adjusted open, close, day range, 52-week range |
-| Movement | Change value and change percentage |
-| Liquidity | Trade count, volume, traded value |
-| Capital structure | Market cap, free float cap, authorized capital, paid-up capital, securities, face value |
-| EPS | Quarterly, half-yearly, nine-month, annual, continuing operations, diluted continuing operations |
-| Annual audited performance | EPS, diluted EPS, NAVPS, operating cash flow, profit, total comprehensive income |
-| Valuation | Basic EPS P/E, diluted EPS P/E, trailing P/E, audited basic EPS P/E |
-| Corporate actions | AGM, year ended, dividend year, dividend yield, cash dividend, bonus issue, right issue |
-| Ownership | Flattened shareholding percentage rows |
+| Group                      | Example Fields                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| Identity                   | Company name, trading code, scrip code, sector, instrument type                                  |
+| Listing metadata           | Listing year, market category, electronic share, debut trading date                              |
+| Market price               | LTP, YCP, open, adjusted open, close, day range, 52-week range                                   |
+| Movement                   | Change value and change percentage                                                               |
+| Liquidity                  | Trade count, volume, traded value                                                                |
+| Capital structure          | Market cap, free float cap, authorized capital, paid-up capital, securities, face value          |
+| EPS                        | Quarterly, half-yearly, nine-month, annual, continuing operations, diluted continuing operations |
+| Annual audited performance | EPS, diluted EPS, NAVPS, operating cash flow, profit, total comprehensive income                 |
+| Valuation                  | Basic EPS P/E, diluted EPS P/E, trailing P/E, audited basic EPS P/E                              |
+| Corporate actions          | AGM, year ended, dividend year, dividend yield, cash dividend, bonus issue, right issue          |
+| Ownership                  | Flattened shareholding percentage rows                                                           |
 
 Noise fields such as graph labels are intentionally excluded from the export, while useful unmodeled DSE fields are still preserved at the end of the workbook.
 
@@ -155,10 +155,10 @@ source .venv/bin/activate
 
 `config.py` contains the main project configuration:
 
-| Name | Purpose |
-| --- | --- |
-| `DOMAIN` | DSE base URL |
-| `MAIN_URL` | DSE industry listing page |
+| Name              | Purpose                                        |
+| ----------------- | ---------------------------------------------- |
+| `DOMAIN`          | DSE base URL                                   |
+| `MAIN_URL`        | DSE industry listing page                      |
 | `IGNORED_SECTORS` | Non-equity-like sectors skipped by the scraper |
 
 Current ignored sectors:
