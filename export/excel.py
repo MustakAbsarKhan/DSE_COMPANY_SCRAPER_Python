@@ -12,6 +12,7 @@ IDENTITY_COLUMNS = [
     "Market Category",
     "Electronic Share",
     "Debut Trading Date",
+    "Present Operational Status",
     "Market Date",
     "Last Update",
 ]
@@ -36,14 +37,24 @@ LIQUIDITY_COLUMNS = [
     "Day Value (mn)",
 ]
 
-CAPITALIZATION_COLUMNS = [
+MARKET_VALUE_COLUMNS = [
     "Market Cap (mn)",
     "Free Float Cap (mn)",
+]
+
+SHARE_CAPITAL_COLUMNS = [
     "Authorized Capital (mn)",
     "Paid-up Capital (mn)",
     "Total Securities",
     "Face Value",
     "Market Lot",
+]
+
+DEBT_AND_EQUITY_COLUMNS = [
+    "Present Loan Status Date",
+    "Short-term Loan (mn)",
+    "Long-term Loan (mn)",
+    "Total Loan (mn)",
     "Reserve & Surplus without OCI (mn)",
     "Other Comprehensive Income (OCI) (mn)",
 ]
@@ -80,14 +91,15 @@ PE_RATIO_SUFFIXES = [
 ]
 
 CORPORATE_ACTION_COLUMNS = [
-    "Last AGM held on",
-    "For the year ended",
     "Last Div Year",
     "Last Div Yield %",
+    "Latest Dividend Status (%)",
     "Cash Dividend",
     "Bonus Issue (Stock Dividend)",
     "Right Issue",
     "Year End",
+    "For the year ended",
+    "Last AGM held on",
 ]
 
 
@@ -172,7 +184,9 @@ def order_columns_for_analysis(columns):
         IDENTITY_COLUMNS,
         PRICE_COLUMNS,
         LIQUIDITY_COLUMNS,
-        CAPITALIZATION_COLUMNS,
+        MARKET_VALUE_COLUMNS,
+        SHARE_CAPITAL_COLUMNS,
+        DEBT_AND_EQUITY_COLUMNS,
     ]
 
     for group in fixed_groups:

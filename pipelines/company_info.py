@@ -7,11 +7,8 @@ async def fetch_company_profiles(domain, company_urls, sector):
     # # ✅ Temporary FILTER - To Debug Only
     # # Uncomment this block when you want to scrape only one company while
     # # debugging parser behavior.
-    # company_urls = [
-    #     url for url in company_urls
-    #     if "ABBANK" in url.upper()
-    # ]
-    
+    # company_urls = [url for url in company_urls if "BSCPLC" in url.upper()]
+
     # print("Filtered URLs:", company_urls)  # DEBUG
 
     # Company URLs from DSE are relative paths. Convert them into absolute URLs

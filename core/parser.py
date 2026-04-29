@@ -124,10 +124,7 @@ def extract_sectors(soup, ignored_sectors):
             name = a.text.strip()
 
             if name not in ignored_sectors:
-                sectors.append({
-                    "name": name,
-                    "url": a["href"]
-                })
+                sectors.append({"name": name, "url": a["href"]})
 
     return sectors
 
@@ -293,11 +290,10 @@ def extract_corporate_action_fields(soup):
 
     # The last 'shrink' block contains latest dividend year/yield information
     # on the current DSE layout.
-    shrink = (soup.find_all(class_='shrink'))[-1]
-    div_info = shrink.findAll('td')
+    shrink = (soup.find_all(class_="shrink"))[-1]
+    div_info = shrink.findAll("td")
     data["Last Div Year"] = int(div_info[0].text.strip())
     data["Last Div Yield %"] = parse_float(div_info[-1].text.strip())
-    
 
     # Scan all company tables for named corporate/fundamental fields.
     for table in soup.find_all("table", id="company"):
@@ -310,68 +306,9 @@ def extract_corporate_action_fields(soup):
 
                 if key in target_fields:
                     data[key] = td.get_text(strip=True)
-    
+
     return data
 
-# ================================
-# OTHER INFORMATION OF THE COMPANY
-# ================================
-def extract_listing_metadata(soup):
-    """Extract listing/category/share metadata from company information tables."""
-    listing_metadata = {}
-    data_fields = [
-        "Listing Year",
-        "Market Category",
-        "Electronic Share",
-    ]
-
-    for table in soup.find_all("table", id="company"):
-        for row in table.find_all("tr"):
-            tds = row.find_all("td")  
-
-            if len(tds) >= 2:
-                key = tds[0].get_text(strip=True)
-                val = tds[1].get_text(strip=True)
-
-                if key in data_fields:
-                    listing_metadata[key] = val
-
-    return listing_metadata
-# ================================
-# Shareholding INFO OF THE COMPANY
-# ================================
-def extract_shareholding_percentages(soup):
-    """Flatten shareholding-percentage rows into export-friendly strings."""
-    rows_data = {}
-
-    # Only target rows that contain "Share Holding Percentage"
-    for idx, row in enumerate(soup.find_all("tr")):
-        tds = row.find_all("td", recursive=False)
-        if len(tds) < 2:
-            continue
-
-        key = tds[0].get_text(" ", strip=True)
-
-        if "Share Holding Percentage" in key:
-            val_td = tds[1]
-
-            # Normalize key and append index to avoid duplicates
-            key = " ".join(key.split())
-            if key in rows_data:
-                key = f"{key} ({idx})"
-
-            # Flatten nested table into one string
-            if val_td.find("table"):
-                inner_values = []
-                for inner_td in val_td.find_all("td"):
-                    text = inner_td.get_text(" ", strip=True)
-                    if text:
-                        inner_values.append(text)
-                rows_data[key] = " | ".join(inner_values)
-            else:
-                rows_data[key] = val_td.get_text(" ", strip=True)
-
-    return rows_data
 
 # Extract Audited EPS and Unaudited EPS for Continuing Operations
 def extract_eps_metrics(soup):
@@ -389,20 +326,31 @@ def extract_eps_metrics(soup):
     periods = ["Q1", "Q2", "HalfYearly", "Q3", "9Months", "Annual"]
 
     # --- First EPS section ---
-    eps_header = table.find("td", string=lambda t: t and "Earnings Per Share (EPS)" in t)
+    eps_header = table.find(
+        "td", string=lambda t: t and "Earnings Per Share (EPS)" in t
+    )
     if eps_header:
         basic_row = eps_header.find_parent("tr").find_next_sibling("tr")
         if basic_row:
-            values = [parse_float(td.get_text(strip=True)) for td in basic_row.find_all("td")[1:]]
+            values = [
+                parse_float(td.get_text(strip=True))
+                for td in basic_row.find_all("td")[1:]
+            ]
             for label, val in zip(periods, values):
                 data[f"{label}_EPS"] = val
 
     # --- Continuing operations EPS section ---
-    eps_cop_header = table.find("td", string=lambda t: t and "Earnings Per Share (EPS) - continuing operations" in t)
+    eps_cop_header = table.find(
+        "td",
+        string=lambda t: t and "Earnings Per Share (EPS) - continuing operations" in t,
+    )
     if eps_cop_header:
         basic_row = eps_cop_header.find_parent("tr").find_next_sibling("tr")
         if basic_row:
-            values = [parse_float(td.get_text(strip=True)) for td in basic_row.find_all("td")[1:]]
+            values = [
+                parse_float(td.get_text(strip=True))
+                for td in basic_row.find_all("td")[1:]
+            ]
             for label, val in zip(periods, values):
                 data[f"{label}_EPS_COP"] = val
 
@@ -413,7 +361,10 @@ def extract_eps_metrics(soup):
                 first_cell = diluted_row.find("td")
 
                 if first_cell and "Diluted" in first_cell.get_text(strip=True):
-                    values = [parse_float(td.get_text(strip=True)) for td in diluted_row.find_all("td")[1:]]
+                    values = [
+                        parse_float(td.get_text(strip=True))
+                        for td in diluted_row.find_all("td")[1:]
+                    ]
                     for label, val in zip(periods, values):
                         data[f"{label}_Diluted_EPS_COP"] = val
 
@@ -422,11 +373,11 @@ def extract_eps_metrics(soup):
 
 def extract_pe_ratios_and_annual_performance(soup):
     """
-    Extract unaudited and audited P/E ratios (Basic, Diluted, Trailing) 
+    Extract unaudited and audited P/E ratios (Basic, Diluted, Trailing)
     from the HTML tables with id="company".
 
     Returns:
-        dict: Combined dictionary of all extracted values with 
+        dict: Combined dictionary of all extracted values with
               date-based keys and descriptive suffixes.
     """
 
@@ -516,10 +467,120 @@ def extract_pe_ratios_and_annual_performance(soup):
         **data_pe_diluted,
         **data_petrail_ratio,
         **data_audited_pe_basic,
-        **data_audited_financial_performance
+        **data_audited_financial_performance,
     }
 
-    
+
+# ================================
+# OTHER INFORMATION OF THE COMPANY
+# ================================
+def extract_listing_metadata(soup):
+    """Extract listing/category/share metadata from company information tables."""
+    listing_metadata = {}
+    data_fields = [
+        "Listing Year",
+        "Market Category",
+        "Electronic Share",
+    ]
+
+    for table in soup.find_all("table", id="company"):
+        for row in table.find_all("tr"):
+            tds = row.find_all("td")
+
+            if len(tds) >= 2:
+                key = tds[0].get_text(strip=True)
+                val = tds[1].get_text(strip=True)
+
+                if key in data_fields:
+                    listing_metadata[key] = val
+
+    return listing_metadata
+
+
+# ================================
+# Shareholding INFO OF THE COMPANY
+# ================================
+def extract_shareholding_percentages(soup):
+    """Flatten shareholding-percentage rows into export-friendly strings."""
+    rows_data = {}
+
+    # Only target rows that contain "Share Holding Percentage"
+    for idx, row in enumerate(soup.find_all("tr")):
+        tds = row.find_all("td", recursive=False)
+        if len(tds) < 2:
+            continue
+
+        key = tds[0].get_text(" ", strip=True)
+
+        if "Share Holding Percentage" in key:
+            val_td = tds[1]
+
+            # Normalize key and append index to avoid duplicates
+            key = " ".join(key.split())
+            if key in rows_data:
+                key = f"{key} ({idx})"
+
+            # Flatten nested table into one string
+            if val_td.find("table"):
+                inner_values = []
+                for inner_td in val_td.find_all("td"):
+                    text = inner_td.get_text(" ", strip=True)
+                    if text:
+                        inner_values.append(text)
+                rows_data[key] = " | ".join(inner_values)
+            else:
+                rows_data[key] = val_td.get_text(" ", strip=True)
+
+    return rows_data
+
+
+# ================================
+# Corporate Performance at a glance
+# ================================
+def extract_corporate_performance_at_a_glance(soup):
+    """Extract status, debt, and dividend fields from performance-at-a-glance."""
+    data = {}
+
+    for table in soup.find_all("table", id="company"):
+        for row in table.find_all("tr"):
+            tds = row.find_all("td", recursive=False)
+            if not tds:
+                continue
+
+            row_text = " ".join(td.get_text(" ", strip=True) for td in tds).strip()
+            if not row_text:
+                continue
+
+            if "Present Loan Status as on" in row_text:
+                data["Present Loan Status Date"] = row_text.replace(
+                    "Present Loan Status as on", ""
+                ).strip()
+                continue
+
+            cell_texts = [td.get_text(" ", strip=True) for td in tds]
+            if len(cell_texts) < 2:
+                continue
+
+            key = cell_texts[-2].strip()
+            value = clean_text(cell_texts[-1])
+
+            if key == "Present Operational Status":
+                data[key] = value
+            elif key == "Short-term loan (mn)":
+                data["Short-term Loan (mn)"] = parse_float(value)
+            elif key == "Long-term loan (mn)":
+                data["Long-term Loan (mn)"] = parse_float(value)
+            elif key == "Latest Dividend Status (%)":
+                data[key] = value
+
+    short_term_loan = data.get("Short-term Loan (mn)")
+    long_term_loan = data.get("Long-term Loan (mn)")
+    if short_term_loan is not None or long_term_loan is not None:
+        data["Total Loan (mn)"] = (short_term_loan or 0) + (long_term_loan or 0)
+
+    return data
+
+
 # =============================
 # MAIN FUNCTION
 # =============================
@@ -565,114 +626,113 @@ def extract_company_profile(soup, sector):
     eps_metrics = extract_eps_metrics(soup)
     pe_and_annual_metrics = extract_pe_ratios_and_annual_performance(soup)
     shareholding_percentages = extract_shareholding_percentages(soup)
-    
+    corporate_performance_at_a_glance = extract_corporate_performance_at_a_glance(soup)
+
     # Start with a predictable base schema. Some fields are initialized as None
     # and filled later by more specialized extraction results.
     result = {
-    # =============================
-    # 🟢 IDENTIFICATION
-    # =============================
-    "Company Name": clean_text(name),
-    "Trading Code": clean_text(trading_code),
-    "Scrip Code": scrip_code,
-    "Sector": sector or clean_text(basic_information.get("Sector")),
-
-    "Market Date": market_date,
-    "Last Update": clean_text(market_table_fields.get("Last Update")),
-
-
-    # =============================
-    # 🟢 PRICE (CORE MARKET DATA)
-    # =============================
-    "LTP": parse_float(market_table_fields.get("Last Trading Price")),
-    "Opening Price": parse_float(market_table_fields.get("Opening Price")),
-    "Closing Price": parse_float(market_table_fields.get("Closing Price")),
-    "YCP": parse_float(market_table_fields.get("Yesterday's Closing Price")),
-    "Adj Opening Price": parse_float(market_table_fields.get("Adjusted Opening Price")),
-
-
-    # =============================
-    # 🟢 RANGE
-    # =============================
-    "Day Low": parse_float(day_low),
-    "Day High": parse_float(day_high),
-    "52W Low": parse_float(low),
-    "52W High": parse_float(high),
-
-
-    # =============================
-    # 🟢 MOMENTUM
-    # =============================
-    "Change Value": change_value,
-    "Change %": change_percent,
-
-
-    # =============================
-    # 🔵 LIQUIDITY
-    # =============================
-    "Day Trade No": parse_int(market_table_fields.get("Day's Trade (Nos.)")),
-    "Day Volume": parse_int(market_table_fields.get("Day's Volume (Nos.)")),
-    "Day Value (mn)": parse_float(market_table_fields.get("Day's Value (mn)")),
-
-
-    # =============================
-    # 🔵 SIZE
-    # =============================
-    "Market Cap (mn)": parse_float(market_table_fields.get("Market Capitalization (mn)")),
-    "Free Float Cap (mn)": parse_float(market_table_fields.get("Free Float Market Cap. (mn)")),
-
-
-    # =============================
-    # 🟡 FUNDAMENTALS
-    # =============================
-    "Authorized Capital (mn)": parse_float(basic_information.get("Authorized Capital (mn)")),
-    "Paid-up Capital (mn)": parse_float(basic_information.get("Paid-up Capital (mn)")),
-    "Reserve & Surplus without OCI (mn)": None,
-    "Other Comprehensive Income (OCI) (mn)": None,
-
-
-    # =============================
-    # 🔴 VALUATION (EPS + P/E)
-    # =============================
-    **eps_metrics,
-    **pe_and_annual_metrics,
-
-
-    # =============================
-    # 🟡 STRUCTURE
-    # =============================
-    "Face Value": parse_float(basic_information.get("Face/par Value")),
-    "Market Lot": parse_int(basic_information.get("Market Lot")),
-    "Total Securities": parse_int(basic_information.get("Total No. of Outstanding Securities")),
-
-
-    # =============================
-    # 🟣 CORPORATE ACTIONS
-    # =============================
-    "Last AGM held on": None,
-    "For the year ended": None,
-    "Last Div Year": None,
-    "Last Div Yield %": None,
-    "Cash Dividend": None,
-    "Bonus Issue (Stock Dividend)": None,
-    "Right Issue": None,
-    "Year End": None,
-
-
-    # =============================
-    # ⚫ META
-    # =============================
-    "Instrument Type": clean_text(basic_information.get("Type of Instrument")),
-    "Debut Trading Date": clean_text(basic_information.get("Debut Trading Date")),
-    "Listing Year": None,
-    "Market Category": None,
-    "Electronic Share": None,
+        # =============================
+        # 🟢 IDENTIFICATION
+        # =============================
+        "Company Name": clean_text(name),
+        "Trading Code": clean_text(trading_code),
+        "Scrip Code": scrip_code,
+        "Sector": sector or clean_text(basic_information.get("Sector")),
+        "Market Date": market_date,
+        "Last Update": clean_text(market_table_fields.get("Last Update")),
+        # =============================
+        # 🟢 PRICE (CORE MARKET DATA)
+        # =============================
+        "LTP": parse_float(market_table_fields.get("Last Trading Price")),
+        "Opening Price": parse_float(market_table_fields.get("Opening Price")),
+        "Closing Price": parse_float(market_table_fields.get("Closing Price")),
+        "YCP": parse_float(market_table_fields.get("Yesterday's Closing Price")),
+        "Adj Opening Price": parse_float(
+            market_table_fields.get("Adjusted Opening Price")
+        ),
+        # =============================
+        # 🟢 RANGE
+        # =============================
+        "Day Low": parse_float(day_low),
+        "Day High": parse_float(day_high),
+        "52W Low": parse_float(low),
+        "52W High": parse_float(high),
+        # =============================
+        # 🟢 MOMENTUM
+        # =============================
+        "Change Value": change_value,
+        "Change %": change_percent,
+        # =============================
+        # 🔵 LIQUIDITY
+        # =============================
+        "Day Trade No": parse_int(market_table_fields.get("Day's Trade (Nos.)")),
+        "Day Volume": parse_int(market_table_fields.get("Day's Volume (Nos.)")),
+        "Day Value (mn)": parse_float(market_table_fields.get("Day's Value (mn)")),
+        # =============================
+        # 🔵 SIZE
+        # =============================
+        "Market Cap (mn)": parse_float(
+            market_table_fields.get("Market Capitalization (mn)")
+        ),
+        "Free Float Cap (mn)": parse_float(
+            market_table_fields.get("Free Float Market Cap. (mn)")
+        ),
+        # =============================
+        # 🟡 FUNDAMENTALS
+        # =============================
+        "Authorized Capital (mn)": parse_float(
+            basic_information.get("Authorized Capital (mn)")
+        ),
+        "Paid-up Capital (mn)": parse_float(
+            basic_information.get("Paid-up Capital (mn)")
+        ),
+        "Reserve & Surplus without OCI (mn)": None,
+        "Other Comprehensive Income (OCI) (mn)": None,
+        "Present Operational Status": None,
+        "Present Loan Status Date": None,
+        "Short-term Loan (mn)": None,
+        "Long-term Loan (mn)": None,
+        "Total Loan (mn)": None,
+        # =============================
+        # 🔴 VALUATION (EPS + P/E)
+        # =============================
+        **eps_metrics,
+        **pe_and_annual_metrics,
+        # =============================
+        # 🟡 STRUCTURE
+        # =============================
+        "Face Value": parse_float(basic_information.get("Face/par Value")),
+        "Market Lot": parse_int(basic_information.get("Market Lot")),
+        "Total Securities": parse_int(
+            basic_information.get("Total No. of Outstanding Securities")
+        ),
+        # =============================
+        # 🟣 CORPORATE ACTIONS
+        # =============================
+        "Last AGM held on": None,
+        "For the year ended": None,
+        "Last Div Year": None,
+        "Last Div Yield %": None,
+        "Cash Dividend": None,
+        "Bonus Issue (Stock Dividend)": None,
+        "Right Issue": None,
+        "Year End": None,
+        "Latest Dividend Status (%)": None,
+        # =============================
+        # ⚫ META
+        # =============================
+        "Instrument Type": clean_text(basic_information.get("Type of Instrument")),
+        "Debut Trading Date": clean_text(basic_information.get("Debut Trading Date")),
+        "Listing Year": None,
+        "Market Category": None,
+        "Electronic Share": None,
     }
-    
+
     # Merge specialized data into the base schema. Later values override earlier
     # placeholder None values where available.
     result.update(corporate_action_fields)
     result.update(listing_metadata)
+    result.update(corporate_performance_at_a_glance)
 
     # Listing Year is scraped as text, so convert it after merging.
     result["Listing Year"] = parse_int(result.get("Listing Year"))
@@ -682,25 +742,20 @@ def extract_company_profile(soup, sector):
     result.update(eps_metrics)
     result.update(pe_and_annual_metrics)
     result.update(shareholding_percentages)
-   
-    
+
     # Convert numeric extra fields
     for field in [
         "Reserve & Surplus without OCI (mn)",
-        "Other Comprehensive Income (OCI) (mn)"
+        "Other Comprehensive Income (OCI) (mn)",
     ]:
         if field in result:
             result[field] = parse_float(result[field])
 
     preserve_unmodeled_source_fields(
-        result,
-        market_table_fields,
-        MARKET_TABLE_FIELDS_ALREADY_MODELED
+        result, market_table_fields, MARKET_TABLE_FIELDS_ALREADY_MODELED
     )
     preserve_unmodeled_source_fields(
-        result,
-        basic_information,
-        BASIC_INFORMATION_FIELDS_ALREADY_MODELED
+        result, basic_information, BASIC_INFORMATION_FIELDS_ALREADY_MODELED
     )
 
     # =============================
