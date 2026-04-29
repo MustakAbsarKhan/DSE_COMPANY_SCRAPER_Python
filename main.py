@@ -36,11 +36,7 @@ async def process_sector(sector):
     # print(f"   ➤ Companies Found: {company_count}")
 
     # Step 2: fetch and parse every company page found inside this sector.
-    sector_data = await fetch_company_profiles(
-        DOMAIN,
-        company_urls,
-        sector["name"]
-    )
+    sector_data = await fetch_company_profiles(DOMAIN, company_urls, sector["name"])
 
     scraped_count = len(sector_data)
 
@@ -51,7 +47,7 @@ async def process_sector(sector):
         "sector": sector["name"],
         "found": company_count,
         "scraped": scraped_count,
-        "data": sector_data
+        "data": sector_data,
     }
 
 
@@ -60,12 +56,12 @@ async def process_sector(sector):
 # =========================
 async def main():
     """Main async orchestrator for the full scraping run."""
-    # # 🔥 HOLIDAY CHECK - FIRST PRIORITY
-    # # Uncomment this block if you want the scraper to stop automatically on
-    # # Friday/Saturday or an official DSE holiday.
-    # is_holiday = await holiday_checker.check_and_exit_if_holiday()
-    # if is_holiday:
-    #     return
+    # 🔥 HOLIDAY CHECK - FIRST PRIORITY
+    # Uncomment this block if you want the scraper to stop automatically on
+    # Friday/Saturday or an official DSE holiday.
+    is_holiday = await holiday_checker.check_and_exit_if_holiday()
+    if is_holiday:
+        return
 
     # Flat list of all company rows that will later be exported to Excel.
     all_data = []
