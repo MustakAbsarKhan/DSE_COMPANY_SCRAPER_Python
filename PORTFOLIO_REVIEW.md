@@ -14,7 +14,7 @@ The production source is intentionally excluded to protect implementation detail
 - Financial-field normalization and ordered workbook output
 - Multi-sheet Excel reporting for business users
 - Data-quality checks, outlier handling, and explainable screening labels
-- Scheduled and manual automation through GitHub Actions
+- Scheduled and manual automation design, documented without running in this public repo
 - Clear module separation across client, parser, pipeline, and export layers
 
 ## Review-Friendly Files
@@ -26,6 +26,7 @@ The production source is intentionally excluded to protect implementation detail
 | `core/parser.py` | Defensive parsing and normalization boundary preview |
 | `export/excel.py` | Workbook sheet and processed-analysis schema preview |
 | `pipelines/` | Sector, company-list, and company-profile stage boundaries |
+| `docs/automation-architecture.yml` | Non-running production automation preview |
 | `Execution Flow.jpg` | High-level system flow |
 
 ## Privacy Boundary

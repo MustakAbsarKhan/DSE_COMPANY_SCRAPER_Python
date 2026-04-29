@@ -149,13 +149,13 @@ The processed analysis layer is intended for primary screening only. It helps id
 
 ## Automation Preview
 
-The private repository supports scheduled and manual runs. The production schedule runs Sunday through Thursday after the Bangladesh market close.
+The real production architecture supports scheduled and manual runs. The production schedule is designed to run Sunday through Thursday after the Bangladesh market close.
 
 ```yaml
 cron: "20 14 * * 0-4"
 ```
 
-This public repository does not run the scraper or publish generated workbooks. Its GitHub workflow only validates that the preview skeleton remains syntactically healthy.
+This public repository does not run any GitHub Actions workflow. Automation is shown only as architecture documentation in [docs/automation-architecture.yml](docs/automation-architecture.yml), which is intentionally outside `.github/workflows/`.
 
 ## How To Review This Repo
 
@@ -173,7 +173,10 @@ For portfolio, hiring, or client review:
 DSE_COMPANY_SCRAPER_Python/
 |
 ├── .github/workflows/
-│   └── preview-validation.yml
+│   └── empty; this public preview does not run GitHub Actions
+|
+├── docs/
+│   └── automation-architecture.yml
 |
 ├── core/
 │   ├── client.py            # Async HTTP client/throttle interface preview

@@ -1,0 +1,38 @@
+# Automation architecture preview only.
+# This file is intentionally stored under docs/ so GitHub Actions will not run it.
+
+name: DSE Scraper Production Architecture
+
+on:
+  schedule:
+    # Sunday through Thursday after Bangladesh market close.
+    - cron: "20 14 * * 0-4"
+  workflow_dispatch:
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout private production source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install private runtime dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run production scraper
+        run: python main.py
+
+      - name: Store generated workbook privately
+        uses: actions/upload-artifact@v4
+        with:
+          name: dse-data
+          path: Export_Data/*.xlsx
+          if-no-files-found: error
+          retention-days: 14
