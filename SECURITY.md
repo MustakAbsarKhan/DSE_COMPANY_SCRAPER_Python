@@ -18,7 +18,9 @@ Do not open a public GitHub issue for sensitive security reports.
 - Runtime logs and generated Excel exports should not be committed.
 - If future features require secrets, store them in environment variables or GitHub Actions secrets.
 - Do not hard-code credentials in source files, workflow files, notebooks, or documentation.
-- Public source code can be copied technically; licensing and attribution protect permitted use, not physical access.
+- This public repository is an architecture preview and excludes production scraping/parsing/export logic.
+- Share summaries, diagrams, screenshots, redacted samples, or selected excerpts for portfolio use.
+- Public source code can be copied technically; this repo limits exposure by keeping operational logic private.
 
 ## Responsible Use
 

@@ -1,76 +1,59 @@
 # DSE Company Data Scraper
 
-> Production-minded async data pipeline for collecting, normalizing, and exporting Dhaka Stock Exchange company fundamentals from inconsistent public web pages.
+> Public architecture preview of a production-minded async data pipeline for collecting, normalizing, analyzing, and exporting Dhaka Stock Exchange company fundamentals.
+
+**Repository status:** public preview only. This repository intentionally shows the architecture, module boundaries, data flow, output structure, and capabilities of the project without publishing the production scraper implementation. The runnable source remains private to protect the work from unauthorized copying, republishing, and result exploitation.
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Async](https://img.shields.io/badge/Async-aiohttp-2F80ED)](https://docs.aiohttp.org/)
-[![Data Export](https://img.shields.io/badge/Export-Excel-217346?logo=microsoftexcel&logoColor=white)](#excel-output)
-[![Automation](https://img.shields.io/badge/Automation-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](#automation)
+[![Architecture](https://img.shields.io/badge/Repo-Architecture%20Preview-blue)](#public-preview-boundary)
+[![Data Export](https://img.shields.io/badge/Output-Excel%20Workbook-217346?logo=microsoftexcel&logoColor=white)](#excel-output-preview)
 [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red)](#license-and-usage)
 
 ## Why This Project Exists
 
-The Dhaka Stock Exchange website exposes valuable company data, but the pages are not shaped like a clean API. Tables are nested, labels vary, values can move between sections, and missing fields are common. This project turns that messy public HTML into a structured Excel dataset that can be used for screening, research, and decision support.
+The Dhaka Stock Exchange website exposes valuable company data, but the pages are not shaped like a clean API. Tables are nested, labels vary, values can move between sections, and missing fields are common.
 
-This is not a toy scraper. It is built as a small data engineering system with async IO, adaptive throttling, retries, modular parsing, normalized financial fields, ordered exports, and scheduled GitHub Actions execution.
+The private implementation turns that messy public HTML into a structured Excel dataset for screening, research, and decision support. This public repository previews how the system is organized and what it can produce without exposing the extraction rules, parser selectors, scoring logic, or workbook-generation internals.
 
 ![Execution flow](Execution%20Flow.jpg)
 
-## Table Of Contents
+## Public Preview Boundary
 
-- [Highlights](#highlights)
-- [What It Collects](#what-it-collects)
-- [Architecture](#architecture)
-- [Data Quality Strategy](#data-quality-strategy)
-- [Excel Output](#excel-output)
-- [Automation](#automation)
-- [Run Locally](#run-locally)
-- [Security And IP Protection](#security-and-ip-protection)
-- [Portfolio Value](#portfolio-value)
-- [Project Structure](#project-structure)
-- [Roadmap](#roadmap)
-- [License And Usage](#license-and-usage)
+Included:
+
+- Architecture and data-flow documentation
+- Public interface skeletons for the main pipeline modules
+- Workbook sheet and column previews
+- Review guidance for portfolio, hiring, and client evaluation
+- Security, license, and IP-protection notes
+- Execution-flow diagram
+
+Not included:
+
+- Production scraping logic
+- Live HTML selectors and parser rules
+- Website-specific fallback handling
+- Workbook scoring and formatting implementation
+- Generated Excel files, logs, or market-analysis outputs
+- Operational dependency pins for the private runtime
+
+Running `python main.py` will intentionally exit with a preview-only message.
 
 ## Highlights
 
-| Area                  | Implementation                                                                              |
+| Area                  | Private implementation capability                                                           |
 | --------------------- | ------------------------------------------------------------------------------------------- |
-| Async pipeline        | `asyncio` orchestration with `aiohttp` network calls                                        |
-| Adaptive throttling   | Dynamic request delay and concurrency reduction after failures                              |
-| Retry strategy        | Request retries with jitter to reduce transient failures                                    |
-| Sector discovery      | Automatically discovers tradable sector links from DSE                                      |
+| Async pipeline        | `asyncio` orchestration with bounded sector and company concurrency                         |
+| Adaptive throttling   | Dynamic pacing and concurrency reduction after failures                                     |
+| Retry strategy        | Request retries with jitter for transient failures                                          |
+| Sector discovery      | Discovers tradable DSE sector links and skips non-equity-like groups                        |
 | Company discovery     | Collects company detail URLs per sector                                                     |
 | Robust parsing        | Combines table extraction, DOM traversal, regex, and fallback logic                         |
-| Normalization         | Converts raw strings into clean numeric and text fields                                     |
-| Financial coverage    | Market data, capital structure, loans, EPS, P/E, audited metrics, dividends, ownership      |
+| Normalization         | Converts inconsistent raw strings into clean numeric and text fields                        |
+| Financial coverage    | Market data, capital structure, debt, EPS, P/E, audited metrics, dividends, ownership       |
 | Analysis-ready export | Multi-sheet Excel workbook with raw data, processed analysis, sector summary, and watchlist |
-| Workbook guide        | First worksheet explains workbook purpose, sheet usage, labels, and key metrics             |
-| Primary screening     | Explainable valuation/watchlist labels with reasons and follow-up checks                    |
-| Outlier handling      | Flags unusual or unreliable metrics before sector comparison                                |
-| Automation            | Scheduled and manual GitHub Actions workflows                                               |
-
-## What It Collects
-
-The final workbook is designed around practical equity research workflows.
-
-| Group                      | Example Fields                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------ |
-| Identity                   | Company name, trading code, scrip code, sector, instrument type                                  |
-| Listing metadata           | Listing year, market category, electronic share, debut trading date                              |
-| Market price               | LTP, YCP, open, adjusted open, close, day range, 52-week range                                   |
-| Movement                   | Change value and change percentage                                                               |
-| Liquidity                  | Trade count, volume, traded value                                                                |
-| Capital structure          | Market cap, free float cap, authorized capital, paid-up capital, securities, face value          |
-| Debt and status            | Operational status, loan-status date, short-term loan, long-term loan, total loan                |
-| EPS                        | Quarterly, half-yearly, nine-month, annual, continuing operations, diluted continuing operations |
-| Annual audited performance | EPS, diluted EPS, NAVPS, operating cash flow, profit, total comprehensive income                 |
-| Valuation                  | Basic EPS P/E, diluted EPS P/E, trailing P/E, audited basic EPS P/E                              |
-| Corporate actions          | AGM, year ended, dividend year, dividend yield, cash dividend, bonus issue, right issue          |
-| Ownership                  | Flattened shareholding percentage rows                                                           |
-
-Noise fields such as graph labels are intentionally excluded from the export, while useful unmodeled DSE fields are still preserved at the end of the workbook.
-
-The processed analysis layer is intended for primary screening only. It helps identify companies worth deeper research, but it is not an automatic buy/sell recommendation system.
+| Data quality          | Flags missing fields, outliers, and unreliable metrics before comparison                    |
+| Automation            | Private scheduled/manual workflow for market-day runs                                       |
 
 ## Architecture
 
@@ -87,7 +70,7 @@ flowchart TD
     I --> J[Export multi-sheet Excel workbook]
 ```
 
-The scraper keeps the pipeline split into small modules so each concern is easy to inspect, test, and extend.
+Module boundary preview:
 
 ```text
 main.py
@@ -99,29 +82,48 @@ main.py
   -> export/excel.py
 ```
 
+## Data Collected Preview
+
+The private workbook is designed around practical equity-research workflows.
+
+| Group                      | Example fields                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| Identity                   | Company name, trading code, scrip code, sector, instrument type                                  |
+| Listing metadata           | Listing year, market category, electronic share, debut trading date                              |
+| Market price               | LTP, YCP, open, adjusted open, close, day range, 52-week range                                   |
+| Movement                   | Change value and change percentage                                                               |
+| Liquidity                  | Trade count, volume, traded value                                                                |
+| Capital structure          | Market cap, free float cap, authorized capital, paid-up capital, securities, face value          |
+| Debt and status            | Operational status, loan-status date, short-term loan, long-term loan, total loan                |
+| EPS                        | Quarterly, half-yearly, nine-month, annual, continuing operations, diluted continuing operations |
+| Annual audited performance | EPS, diluted EPS, NAVPS, operating cash flow, profit, total comprehensive income                 |
+| Valuation                  | Basic EPS P/E, diluted EPS P/E, trailing P/E, audited basic EPS P/E                              |
+| Corporate actions          | AGM, year ended, dividend year, dividend yield, cash dividend, bonus issue, right issue          |
+| Ownership                  | Flattened shareholding percentage rows                                                           |
+
 ## Data Quality Strategy
 
-DSE pages are inconsistent, so the parser does not rely on a single brittle selector. It uses layered extraction:
+The private parser is designed for inconsistent pages and missing fields. The public skeleton shows the boundaries, while the detailed implementation remains private.
 
-- Table scanning for structured key/value fields
-- Targeted DOM traversal for nested sections
-- Regex extraction for values embedded in page text
+The strategy includes:
+
+- Layered extraction instead of one brittle selector
 - Defensive null handling for missing or shifted fields
 - Duplicate prevention when a field is already normalized under a clearer name
-- Stable output ordering so every workbook is easy to compare over time
-- Fully empty raw columns are removed from the raw-data worksheet and recorded in `Dropped_Empty_Columns`
-- Sector comparisons use median and trimmed average alongside simple average to reduce outlier distortion
-- Outlier flags separate unreliable metrics from usable valuation comparisons
+- Stable output ordering so workbooks can be compared over time
+- Removal and audit of fully empty raw columns
+- Sector medians and trimmed averages to reduce outlier distortion
+- Outlier flags separating unreliable metrics from usable valuation comparisons
 
-## Excel Output
+## Excel Output Preview
 
-Generated files follow this pattern:
+Generated files in the private runtime follow this pattern:
 
 ```bash
 Export_Data/DSE_Data_{Market_Date}.xlsx
 ```
 
-The workbook contains multiple worksheets:
+The workbook contains:
 
 | Worksheet               | Purpose                                                                 |
 | ----------------------- | ----------------------------------------------------------------------- |
@@ -133,42 +135,6 @@ The workbook contains multiple worksheets:
 | `Data_Quality_Issues`   | Companies with weak reliability, missing fields, or outlier concerns    |
 | `Dropped_Empty_Columns` | Audit list of raw columns removed because every company was blank       |
 
-`Processed_Analysis` starts with `Company Name`, `Trading Code`, and `Sector` so the analysis can be reviewed without switching back to the raw sheet.
-
-Long explanation fields are formatted for readability inside Excel. The workbook freezes useful panes, applies filters, styles header rows, wraps conclusion text, and keeps key identity columns visible while reviewing processed analysis.
-
-Raw column groups are ordered for financial analysis:
-
-1. Identity and listing metadata
-2. Price and movement
-3. Liquidity
-4. Market value
-5. Share capital
-6. Debt and equity
-7. EPS metrics
-8. Audited annual financial performance
-9. P/E ratios
-10. Corporate actions
-11. Shareholding
-12. Remaining preserved scraped fields
-
-### Processed Screening Metrics
-
-The processed worksheet adds practical first-pass research fields, including:
-
-| Category           | Example Columns                                                                 |
-| ------------------ | ------------------------------------------------------------------------------- |
-| Latest values      | Latest EPS used, latest NAVPS used, latest profit, latest operating cash flow   |
-| Valuation ratios   | Latest P/E used, price to NAV, earnings yield, P/E vs sector median             |
-| Sector comparison  | Sector average, median, and trimmed average for P/E, P/NAV, and dividend yield  |
-| Balance-sheet risk | Debt to market cap, debt to profit, cash flow to profit                         |
-| Price context      | Price position inside the 52-week range                                         |
-| Ownership          | Sponsor/director, institute, foreign, and public holding percentages            |
-| Ranking            | Sector market-cap rank and sector liquidity rank                                |
-| Quality control    | Outlier flag, outlier reason, usable-for-sector-average flag, reliability score |
-| Screening scores   | Value, quality, risk, liquidity, dividend, and final screening score            |
-| Explanation        | Positive signals, negative signals, key risks, valuation reason, next checks    |
-
 Final screening labels include:
 
 - Potentially Undervalued
@@ -179,81 +145,27 @@ Final screening labels include:
 - Speculative / Risky
 - Insufficient Data
 
-The `What To Check Next` column suggests follow-up research, such as checking whether low P/E comes from recurring earnings or a one-time profit spike, whether dividend payout is sustainable, whether cash flow supports profit, whether loan maturity and finance cost are manageable, whether liquidity is enough for entry/exit, and whether sponsor, institutional, or foreign ownership trends need review.
+The processed analysis layer is intended for primary screening only. It helps identify companies worth deeper research, but it is not an automatic buy/sell recommendation system.
 
-## Automation
+## Automation Preview
 
-The GitHub Actions workflows support both scheduled and manual runs.
+The private repository supports scheduled and manual runs. The production schedule runs Sunday through Thursday after the Bangladesh market close.
 
 ```yaml
 cron: "20 14 * * 0-4"
 ```
 
-This schedule runs Sunday through Thursday at 14:20 UTC, matching Bangladesh market days after the close. The current workflow uploads generated Excel files as GitHub Actions artifacts.
+This public repository does not run the scraper or publish generated workbooks. Its GitHub workflow only validates that the preview skeleton remains syntactically healthy.
 
-Important: for a public repository, workflow runs and retained artifacts may be visible to people with repository read access. If the generated Excel analysis should remain private, run the scheduled scraper in a private repository or upload the output to private storage instead of publishing artifacts from a public repo.
+## How To Review This Repo
 
-## Run Locally
+For portfolio, hiring, or client review:
 
-```bash
-git clone https://github.com/MustakAbsarKhan/DSE_COMPANY_SCRAPER_Python.git
-cd DSE_COMPANY_SCRAPER_Python
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
-```
-
-On Linux or macOS, activate the environment with:
-
-```bash
-source .venv/bin/activate
-```
-
-## Configuration
-
-`config.py` contains the main project configuration:
-
-| Name              | Purpose                                        |
-| ----------------- | ---------------------------------------------- |
-| `DOMAIN`          | DSE base URL                                   |
-| `MAIN_URL`        | DSE industry listing page                      |
-| `IGNORED_SECTORS` | Non-equity-like sectors skipped by the scraper |
-
-Current ignored sectors:
-
-- Corporate Bond
-- Debenture
-- G-SEC (T.Bond)
-
-## Security And IP Protection
-
-This repository is designed to showcase engineering skill without exposing secrets or unnecessary runtime artifacts.
-
-- No API keys, tokens, passwords, or private credentials are required.
-- Runtime logs and generated Excel exports are ignored by Git.
-- The local `Export_Data/` folder is ignored so newly generated workbooks are not accidentally added to source commits. This does not stop GitHub Actions from uploading `Export_Data/*.xlsx` as workflow artifacts.
-- `.env` and virtual environment folders are ignored.
-- Network access is limited to public DSE pages.
-- Generated artifacts should be shared intentionally through GitHub Actions, not committed as source.
-- See [SECURITY.md](SECURITY.md) for reporting guidance.
-
-Important: public repositories can always be viewed and copied technically. Protection comes from license terms, attribution, commit history, public proof of authorship, and limiting what sensitive or proprietary material is published.
-
-## Portfolio Value
-
-This project demonstrates practical skills that matter in freelance and professional data roles:
-
-- Async Python system design
-- Resilient scraping under unstable HTML structures
-- Financial data normalization
-- Defensive parsing and graceful degradation
-- Explainable Excel reporting for business users
-- Sector-relative equity screening
-- Outlier-aware data quality handling
-- GitHub Actions automation
-- Modular code organization
-- Clear documentation for maintainability
+- Read this README for project scope, architecture, and engineering decisions
+- Read [PORTFOLIO_REVIEW.md](PORTFOLIO_REVIEW.md) for a concise reviewer brief
+- Review `Execution Flow.jpg` for the end-to-end flow
+- Inspect `main.py` and module skeletons for the system shape
+- Ask for a live walkthrough, redacted workbook screenshots, or selected sanitized excerpts if deeper evaluation is needed
 
 ## Project Structure
 
@@ -261,40 +173,44 @@ This project demonstrates practical skills that matter in freelance and professi
 DSE_COMPANY_SCRAPER_Python/
 |
 ├── .github/workflows/
-│   ├── dse_scraper.yml      # Scheduled/manual production-style run
-│   └── manual.yml           # Manual execution workflow
+│   └── preview-validation.yml
 |
 ├── core/
-│   ├── client.py            # Async HTTP client with adaptive throttle
-│   ├── holidays.py          # DSE holiday/weekend checker
-│   ├── logger.py            # Shared logger setup
-│   └── parser.py            # HTML parsing and normalization
+│   ├── client.py            # Async HTTP client/throttle interface preview
+│   ├── holidays.py          # Market-calendar interface preview
+│   ├── logger.py            # Shared logger boundary
+│   └── parser.py            # Parser and normalized schema preview
 |
 ├── export/
-│   └── excel.py             # Multi-sheet raw and processed Excel export
+│   └── excel.py             # Workbook sheet and analysis schema preview
 |
 ├── pipelines/
-│   ├── sectors.py           # Sector discovery
-│   ├── companies.py         # Company URL discovery
-│   └── company_info.py      # Company profile scraping
+│   ├── sectors.py           # Sector discovery stage boundary
+│   ├── companies.py         # Company URL discovery stage boundary
+│   └── company_info.py      # Company profile stage boundary
 |
 ├── config.py
 ├── main.py
+├── PORTFOLIO_REVIEW.md
 ├── requirements.txt
 ├── SECURITY.md
 └── README.MD
 ```
 
-## Roadmap
+## Portfolio Value
 
-- Add unit tests for parser helpers and Excel column ordering
-- Add unit tests for processed screening metrics and classification rules
-- Add optional CSV and Parquet exports
-- Add historical snapshot storage
-- Add schema validation for exported rows
-- Add a dashboard layer for screening and comparisons
-- Add configurable scoring weights and sector-specific rule overrides
-- Add CI checks for formatting and tests
+This project demonstrates practical skills that matter in freelance and professional data roles:
+
+- Async Python system design
+- Resilient scraping architecture under unstable HTML structures
+- Financial data normalization design
+- Defensive parsing and graceful degradation
+- Explainable Excel reporting for business users
+- Sector-relative equity screening
+- Outlier-aware data quality handling
+- GitHub Actions automation design
+- Modular code organization
+- Clear documentation for maintainability
 
 ## Author
 
@@ -309,6 +225,6 @@ Original creator and maintainer.
 
 Copyright (c) Mohammad Mustak Absar Khan.
 
-This project is published for portfolio review, educational inspection, and hiring evaluation. Commercial use, resale, redistribution, or claiming this work as your own is not permitted without written permission from the author.
+This project is published as a public portfolio and architecture preview. Commercial use, resale, redistribution of private implementation details, or claiming this work as your own is not permitted without written permission from the author.
 
 See [LICENSE.md](LICENSE.md) for the full terms.

@@ -1,10 +1,3 @@
-# Async HTTP requests for fetching many DSE pages concurrently.
-aiohttp>=3.8.0
-
-# HTML parsing helpers used by the parser layer.
-beautifulsoup4>=4.12.0
-lxml>=4.9.0
-
-# DataFrame creation, processed analysis worksheets, and Excel styling.
-pandas>=2.0.0
-openpyxl>=3.1.0
+# This public repository is an architecture preview and is not runnable.
+# The private implementation uses async HTTP, HTML parsing, DataFrame, and Excel
+# libraries, but exact runtime dependencies are intentionally omitted here.

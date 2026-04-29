@@ -6,13 +6,21 @@ __pycache__/
 venv/
 .venv/
 env/
+.env
+.env.*
 .env/
 
 # Ignore runtime outputs
 DSECompanyScraper.log
 *.log
 Export_Data/
+*.xlsx
 *.parquet
+
+# Ignore test and coverage output
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Ignore local editor and OS files
 .vscode/
