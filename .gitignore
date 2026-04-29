@@ -11,6 +11,8 @@ env/
 # Ignore runtime outputs
 DSECompanyScraper.log
 *.log
+Export_Data/
+*.parquet
 
 # Ignore local editor and OS files
 .vscode/
